@@ -15,9 +15,9 @@ def administratorlogin():
     while(True):
         username = input("Enter UserName: ")
         password = input("Enter Password: ")
-        if username == "admin" and password == 1122:
-            administratordashoard()
-            break
+        
+        if username == "admin" and password == "1122":
+            administratordashboard()
         else:
             attempts = attempts-1
             if attempts == 0:
@@ -25,6 +25,21 @@ def administratorlogin():
                 break
             else:
                 print(f"Invalid Credention! Try Agian\n Remaining Attempts: {attempts}")
+def administratordashboard():
+    header("ADMINISTRATOR DASHBOARD")
+    print("\n")
+    element("-")
+    print(f"{'Option':<6} Function")
+    print(f"{'[1]':<3} Add Rooms")
+    print(f"{'[2]':<3} View All Rooms")
+    print(f"{'[3]':<3} Manage Staff")
+    print(f"{'[4]':<3} Worder Duties")
+    print(f"{'[5]':<3} View Booking")
+    print(f"{'[6]':<3} Financials")
+    print(f"{'[7]':<3} Attendence")
+    print(f"{'[8]':<3} System Stats")
+    element("-")
+    print(f"{'[0]':<3} Logout")
 def main():
     while(True):
         header("Hostel Management System")
@@ -45,7 +60,7 @@ def main():
             worker()
         elif (option == 5):
             print("[System Shutting Down... Goodbye!]")
-            break
+            1
         else:
             print("Invalid Option")
 
