@@ -1,15 +1,19 @@
 space = " "
+#Adding Room 2D Array
 MAX_CAP = 300
 roomCount = 0
+#here -1 = RoomNO, HD = Type, -11 = Price
 hotelData = [[-1,"HD",-11] for _ in range(MAX_CAP)]
 
-def header(name):
-    print("=" * 55)
-    print(f"{name:^55}")
-    print("=" * 55)
 
-def element(dash):
-    print(dash * 55)
+#Adding UserData 2D Array
+MAX_USER = 50
+userSount = 1
+#Here U = Username, P = Password, R= Role
+userData= [["U","P","R"] for _ in range(MAX_USER)]
+userData[0][0] = "admin"
+userData[0][1] = "1122"
+userData[0][2] = "Admin"
 
 def administratorlogin():
     header("Hostel Management System")
@@ -32,7 +36,7 @@ def administratorlogin():
             main()
             return
 
-        if username == "admin" and password == "1122":
+        if username == userData[0][0] and password == userData[0][1]:
             element("-")
             print("\nLogin Successful!\n")
             administratordashboard()
@@ -46,7 +50,21 @@ def administratorlogin():
                 print(f"Invalid Credentials! Try Again")
                 print(f"Remaining Attempts: {attempts}\n")
 
+def header(name):
+    print("=" * 55)
+    print(f"{name:^55}")
+    print("=" * 55)
 
+def element(dash):
+    print(dash * 55)
+#Admin Login Funciton
+def roomtypes():
+    print("AVAILABLE ROOM TYPES:")
+    print("Single[S]  (1 Bed,  Max 1 Person)")
+    print("Double[D]  (1 Bed,  Max 2 Persons)")
+    print("Twin[T]    (2 Beds, Max 2 Persons)")
+    print("Suite[ST]  (Luxury, Max 4 Persons)")
+#Admin Dashboard
 def administratordashboard():
     header("ADMINISTRATOR DASHBOARD")
     element("-")
@@ -83,17 +101,14 @@ def administratordashboard():
     else:
         print("Invalid Option")
 
+#Adding Rooms Function
 def addroom():
     global roomCount
     header("Hostel Management System")
     print(f"{'[ADD NEW ROOM]':^55}\n")
     print('"Enter the details below to register a new room in the system."')    
     element("-")
-    print("AVAILABLE ROOM TYPES:")
-    print("Single[S]  (1 Bed,  Max 1 Person)")
-    print("Double[D]  (1 Bed,  Max 2 Persons)")
-    print("Twin[T]    (2 Beds, Max 2 Persons)")
-    print("Suite[ST]  (Luxury, Max 4 Persons)")
+    roomtypes()
     element("-")
     New_RoomNO = input(f"Room No[1-to-{MAX_CAP}]: ")
     New_RoomType = input("Enter Room Type(S/D/T/ST): ")
@@ -116,7 +131,7 @@ def addroom():
         Room_Type = "Suite"
 
     hotelData[roomCount][0] = New_RoomNO
-    hotelData[roomCount][1] = New_RoomType
+    hotelData[roomCount][1] = Room_Type
     hotelData[roomCount][2] = New_RoomPrice
     print(f"[SUCCESS] Room {New_RoomNO} ({Room_Type}) created successfully!\n")
     roomCount += 1
@@ -129,9 +144,84 @@ def addroom():
         addroom()
     else:
         administratordashboard()
+#list of All room
+def viewAllRooms():
+    global roomCount
+    header("Hostel Management System")
+    print(f"{'[ROOM INVENTORY LIST]':^55}\n")
+    element("-")
+    print(f"{space:<4} {'ROOM NO':<10} {'TYPE':<20} PRICE (PKR)")
+    element("-")
+    for i in range(roomCount):
+        print(f"{space:<4} {hotelData[i][0]:<10} {hotelData[i][1]:<20} {hotelData[i][2]}")
+    element("-")
+
+    print("")
+    print(f"[Total Rooms: {roomCount}]")
+    print("")
+    element("=")
 
 
+    while(True):
+        print("[1] Press [M] to Manage Rooms")
+        print("[2] Press [X] to Go Back")    
+        option= input("Enter Option: ")
+        if option.upper() == 'M' or option.upper() == 'm':
+            manageRooms()
+            return
+        elif option.upper() == 'X' or option.upper() == 'x':
+            administratordashboard()
+            return
+        else:
+            print("InValid Option! Try Again")
+     
+def manageRooms():
+    global roomCount
+    header("Manage Rooms")
+    element("-")
+    print(f"{space:<4} {'ROOM NO':<10} {'TYPE':<20} PRICE (PKR)")
+    element("-")
+    for i in range(roomCount):
+        print(f"{space:<4} {hotelData[i][0]:<10} {hotelData[i][1]:<20} {hotelData[i][2]}")
+    element("-")
+    
+    Search_Room_No = input("Enter Room No: ")
+    
+    found_index = -1
+    for i in roomCount:
+        if hotelData[i][0] == Search_Room_No:
+            found_index = i
+            break
+    if found_index == -1:
+        print(f"\n[ERROR] Room {Search_Room_No} not found in List.")
+        return
+    print("\n[ROOM FOUND!]")
+    print(f"Current Data: TYPE >>{hotelData[found_index][1]:<20} << |  PRICE >>{found_index[i][2]}<<")
+    element("-")
+    print("[1] Edit Data")
+    print("[2] Delete")
+    print("[0] Cancel")
+    option = int(input("Enter Option: "))
+    if option == 1:
+        print("\n--- UPDATE DETAILS ---")
+        roomtypes()
+        New_RoomType = input("Enter New Type (S\D\T\ST) or Press Enter To Skip")
+        if (New_RoomType != ""):
+            if New_RoomType.upper() == 'S' or New_RoomType.lower() == "s":
+                hotelData[found_index][1] = "Single"
+            elif  New_RoomType.upper() == 'D' or New_RoomType.lower() == "d":
+                hotelData[found_index][1] = "Double"
+            elif  New_RoomType.upper() == 'T' or New_RoomType.lower() == "t":
+                hotelData[found_index][1] = "Triple"
+            elif New_RoomType.upper() == 'ST' or New_RoomType.lower() == "st":
+                hotelData[found_index][1] = "Suite"
+        New_Room_Price = int(input("Enter New Price Or Press Enter To Skip"))
 
+
+    
+def ManageStaff():
+    header("STAFF MANAGEMENT PORTAL")
+    
 def main():
     while(True):
         header("Hostel Management System")
