@@ -8,7 +8,7 @@ hotelData = [[-1,"HD",-11] for _ in range(MAX_CAP)]
 
 #Adding UserData 2D Array
 MAX_USER = 50
-userSount = 1
+userCount = 1
 #Here U = Username, P = Password, R= Role
 userData= [["U","P","R"] for _ in range(MAX_USER)]
 userData[0][0] = "admin"
@@ -206,7 +206,7 @@ def viewAllRooms():
             break
             
         else:
-            print("InValid Option! Try Again")
+            print("Invalid Option! Try Again")
 def manageRooms():
     global roomCount
     header("Manage Rooms")
@@ -278,7 +278,27 @@ def manageRooms():
     
 def ManageStaff():
     header("STAFF MANAGEMENT PORTAL")
-    
+    print(f"[Total Users={userCount}]")
+    element("-")
+    print("[1] Add New Staff Member")
+    print("[2] View All Users")
+    print("[0] Add New Staff Member")
+    option = int(input("Enter Option: "))
+    if option == 1:
+        addNewStaff()
+    elif option == 2:
+
+def addNewStaff():
+    header("REGISTER NEW USER")
+    element("-")
+    print("[1] Enter New Username:")
+    print("[2] Enter Password:")
+    print("[3] Ty Rpeole:(Admin [A]/Receptionist [R] | Manager [M] | Worker[W])")
+    option = int(input("Enter Option: "))
+    if option == 1:
+        addNewStaff()
+    elif option == 2:
+
 def main():
     while(True):
         header("Hostel Management System")
