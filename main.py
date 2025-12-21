@@ -100,7 +100,6 @@ def administratordashboard():
         return
     else:
         print("Invalid Option")
-
 #Adding Rooms Function
 def addroom():
     global roomCount
@@ -110,25 +109,35 @@ def addroom():
     element("-")
     roomtypes()
     element("-")
-    New_RoomNO = input(f"Room No[1-to-{MAX_CAP}]: ")
-    New_RoomType = input("Enter Room Type(S/D/T/ST): ")
+    while True:
+        try:
+            New_RoomNO = int(input(f"Room No[1-to-{MAX_CAP}]: "))
+            
+            if is_valid_room_number(New_RoomNO):
+                exists = False
+                for i in range(roomCount):
+                    if hotelData[i][0] == New_RoomNO:
+                        print(f"[ERROR] Room {New_RoomNO} Already Exists!")
+                        exists = True
+                        break
+                if not exists:
+                    break
+            
+        except ValueError:
+            print("[ERROR] Invalid Input. Please enter a number.")
+    Room_Type = ""
+    while True:
+        New_RoomType = input("Enter Room Type (S/D/T/ST): ").upper()
+        New_RoomType= New_RoomType.upper()
+        result = get_room_type_name(New_RoomType)
+        if result != None:
+            Room_Type = result
+            break
+  
+                
+       
     New_RoomPrice = int(input("Enter Price Per Night (PKR): "))
-    element("-")
-    print("[System Check...]")
-    
-    for i in range(roomCount):
-        if hotelData[i][0] == New_RoomNO:
-            print(f"[ERROR] Room {New_RoomNO} Already Exists!")
-            return
-    Room_Type = "Standard"
-    if New_RoomType.upper() == 'S' or New_RoomType.lower() == "s":
-        Room_Type = "Single"
-    elif  New_RoomType.upper() == 'D' or New_RoomType.lower() == "d":
-        Room_Type = "Double"
-    elif  New_RoomType.upper() == 'T' or New_RoomType.lower() == "t":
-        Room_Type = "Triple"
-    elif New_RoomType.upper() == 'ST' or New_RoomType.lower() == "st":
-        Room_Type = "Suite"
+   
 
     hotelData[roomCount][0] = New_RoomNO
     hotelData[roomCount][1] = Room_Type
@@ -144,6 +153,28 @@ def addroom():
         addroom()
     else:
         administratordashboard()
+
+def is_valid_room_number(room):
+    if room > int(MAX_CAP):
+        print(f"[ERROR] Room No Must Be Less Than {MAX_CAP}")
+        return False
+    elif room < 1:
+        print(f"[ERROR] Room No cannot be zero or negative.")
+        return False
+    else:
+        return True
+def get_room_type_name(type):
+    if type == 'S':
+        return "Single"
+    elif  type == 'D':
+       return "Double"
+    elif  type == 'T':
+        return "Triple"
+    elif type== 'ST':
+        return "Suite"
+    else:
+       print("[ERROR] Invalid Room Type. Please use S, D, T, or ST.")
+       return None
 #list of All room
 def viewAllRooms():
     global roomCount
@@ -165,16 +196,17 @@ def viewAllRooms():
     while(True):
         print("[1] Press [M] to Manage Rooms")
         print("[2] Press [X] to Go Back")    
-        option= input("Enter Option: ")
-        if option.upper() == 'M' or option.upper() == 'm':
+        option= input("Enter Option: ").upper()
+        if option.upper() == 'M':
             manageRooms()
-            return
-        elif option.upper() == 'X' or option.upper() == 'x':
+            break
+            
+        elif option.upper() == 'X':
             administratordashboard()
-            return
+            break
+            
         else:
             print("InValid Option! Try Again")
-     
 def manageRooms():
     global roomCount
     header("Manage Rooms")
@@ -188,7 +220,7 @@ def manageRooms():
     Search_Room_No = input("Enter Room No: ")
     
     found_index = -1
-    for i in roomCount:
+    for i in range(roomCount):
         if hotelData[i][0] == Search_Room_No:
             found_index = i
             break
@@ -196,7 +228,7 @@ def manageRooms():
         print(f"\n[ERROR] Room {Search_Room_No} not found in List.")
         return
     print("\n[ROOM FOUND!]")
-    print(f"Current Data: TYPE >>{hotelData[found_index][1]:<20} << |  PRICE >>{found_index[i][2]}<<")
+    print(f"Current Data: TYPE={hotelData[found_index][1]:<4}| PRICE={hotelData[found_index][2]}")
     element("-")
     print("[1] Edit Data")
     print("[2] Delete")
@@ -205,18 +237,43 @@ def manageRooms():
     if option == 1:
         print("\n--- UPDATE DETAILS ---")
         roomtypes()
-        New_RoomType = input("Enter New Type (S\D\T\ST) or Press Enter To Skip")
+        New_RoomType = input("Enter New Type (S\D\T\ST) or Press Enter To Skip").upper()
         if (New_RoomType != ""):
-            if New_RoomType.upper() == 'S' or New_RoomType.lower() == "s":
+            if New_RoomType.upper() == 'S':
                 hotelData[found_index][1] = "Single"
-            elif  New_RoomType.upper() == 'D' or New_RoomType.lower() == "d":
+            elif  New_RoomType.upper() == 'D':
                 hotelData[found_index][1] = "Double"
-            elif  New_RoomType.upper() == 'T' or New_RoomType.lower() == "t":
+            elif  New_RoomType.upper() == 'T' :
                 hotelData[found_index][1] = "Triple"
-            elif New_RoomType.upper() == 'ST' or New_RoomType.lower() == "st":
+            elif New_RoomType.upper() == 'ST':
                 hotelData[found_index][1] = "Suite"
         New_Room_Price = int(input("Enter New Price Or Press Enter To Skip"))
+        if (New_Room_Price != 0):
+            hotelData[found_index][2] = New_Room_Price
 
+        
+        print("\n[SUCCESS] Room details updated successfully!")
+        print(f"{space:<4} {hotelData[found_index][0]:<10} {hotelData[found_index][1]:<20} {hotelData[i][2]}")
+    
+
+    elif option == 2:
+        confirm = input(f"Are you sure you want to DELETE Room {Search_Room_No}? [Y/N]").upper()
+        if confirm.upper() == "Y":
+            for j in range(found_index,roomCount-1):
+
+                hotelData[j][0] = -1
+                hotelData[j][1] = "HD"
+                hotelData[j][2] = -11
+            roomCount = roomCount-1
+            
+            print("\n[SUCCESS] Room deleted successfully.")
+            viewAllRooms()
+        else:
+            print("\n[CANCELLED] Deletion cancelled.")
+            viewAllRooms()
+    else:
+        print("\n[INFO] Returned to menu.")
+        viewAllRooms()
 
     
 def ManageStaff():
