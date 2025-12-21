@@ -10,10 +10,12 @@ hotelData = [[-1,"HD",-11] for _ in range(MAX_CAP)]
 MAX_USER = 50
 userCount = 1
 #Here U = Username, P = Password, R= Role
-userData= [["U","P","R"] for _ in range(MAX_USER)]
-userData[0][0] = "admin"
-userData[0][1] = "1122"
-userData[0][2] = "Admin"
+userData= [[-1,"U","P","R"] for _ in range(MAX_USER)]
+
+userData[0][0] = -1
+userData[0][1] = "admin"
+userData[0][2] = "1122"
+userData[0][3] = "Admin"
 
 def administratorlogin():
     header("Hostel Management System")
@@ -36,7 +38,7 @@ def administratorlogin():
             main()
             return
 
-        if username == userData[0][0] and password == userData[0][1]:
+        if username == userData[0][1] and password == userData[0][2]:
             element("-")
             print("\nLogin Successful!\n")
             administratordashboard()
@@ -49,7 +51,6 @@ def administratorlogin():
             else:
                 print(f"Invalid Credentials! Try Again")
                 print(f"Remaining Attempts: {attempts}\n")
-
 def header(name):
     print("=" * 55)
     print(f"{name:^55}")
@@ -85,7 +86,7 @@ def administratordashboard():
     elif option == 2:
         viewAllRooms()
     elif option == 3:
-        print("Manage Staff")
+        ManageStaff()
     elif option == 4:
         print("Worder Duties")
     elif option == 5:
@@ -122,7 +123,6 @@ def addroom():
                         break
                 if not exists:
                     break
-            
         except ValueError:
             print("[ERROR] Invalid Input. Please enter a number.")
     Room_Type = ""
@@ -132,13 +132,10 @@ def addroom():
         result = get_room_type_name(New_RoomType)
         if result != None:
             Room_Type = result
-            break
-  
-                
+            break  
        
     New_RoomPrice = int(input("Enter Price Per Night (PKR): "))
    
-
     hotelData[roomCount][0] = New_RoomNO
     hotelData[roomCount][1] = Room_Type
     hotelData[roomCount][2] = New_RoomPrice
@@ -237,7 +234,7 @@ def manageRooms():
     if option == 1:
         print("\n--- UPDATE DETAILS ---")
         roomtypes()
-        New_RoomType = input("Enter New Type (S\D\T\ST) or Press Enter To Skip").upper()
+        New_RoomType = input("Enter New Type (S\D\T\ST) or Press Enter To Skip")
         if (New_RoomType != ""):
             if New_RoomType.upper() == 'S':
                 hotelData[found_index][1] = "Single"
@@ -277,6 +274,7 @@ def manageRooms():
 
     
 def ManageStaff():
+    global userCount
     header("STAFF MANAGEMENT PORTAL")
     print(f"[Total Users={userCount}]")
     element("-")
@@ -287,17 +285,38 @@ def ManageStaff():
     if option == 1:
         addNewStaff()
     elif option == 2:
+        viewallUser()
+
 
 def addNewStaff():
     header("REGISTER NEW USER")
     element("-")
-    print("[1] Enter New Username:")
-    print("[2] Enter Password:")
-    print("[3] Ty Rpeole:(Admin [A]/Receptionist [R] | Manager [M] | Worker[W])")
-    option = int(input("Enter Option: "))
+    
+    while True:
+        username = input("[1] Enter New Username:")
+        for i in range(userCount):
+            if userData[i][1] == username:
+                print(f"[ERROR] UserName {username} Already Exists!")
+                break   
+    password = input("[2] Enter Password:")
+    userrole = input("[3] Ty Rpeole:(Admin [A]/Receptionist [R] | Manager [M] | Worker[W])")
+    userData[userCount][0] = userCount
+    userData[userCount][1] = username
+    userData[userCount][2] = password
+    userData[userCount][3] = usernameusername
+    print(f"[SUCCESS] User= {username} Role= ({username}) created successfully!\n")
+    userCount += 1
+
+    print("[1] Add Another")
+    print("[0] Go Back")
+    element("-")
+    option = int(input("Select Option: "))
     if option == 1:
         addNewStaff()
-    elif option == 2:
+    else:
+        administratordashboard()
+       
+
 
 def main():
     while(True):
