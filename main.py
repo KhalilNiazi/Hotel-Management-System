@@ -38,19 +38,20 @@ def administratorlogin():
             main()
             return
 
-        if username == userData[0][1] and password == userData[0][2]:
-            element("-")
-            print("\nLogin Successful!\n")
-            administratordashboard()
-            return   
-        else:
-            attempts = attempts-1
-            if attempts == 0:
-                print("No More Attempts Left")
-                break
+        for i in range(userCount):
+            if username == userData[i][1] and password == userData[i][2]:
+                element("-")
+                print("\nLogin Successful!\n")
+                administratordashboard()
+                return   
             else:
-                print(f"Invalid Credentials! Try Again")
-                print(f"Remaining Attempts: {attempts}\n")
+                attempts = attempts-1
+                if attempts == 0:
+                    print("No More Attempts Left")
+                    break
+                else:
+                    print(f"Invalid Credentials! Try Again")
+                    print(f"Remaining Attempts: {attempts}\n")
 def header(name):
     print("=" * 55)
     print(f"{name:^55}")
@@ -234,7 +235,7 @@ def manageRooms():
     if option == 1:
         print("\n--- UPDATE DETAILS ---")
         roomtypes()
-        New_RoomType = input("Enter New Type (S\D\T\ST) or Press Enter To Skip")
+        New_RoomType = input("Enter New Type (S/D/T/ST) or Press Enter To Skip")
         if (New_RoomType != ""):
             if New_RoomType.upper() == 'S':
                 hotelData[found_index][1] = "Single"
@@ -280,43 +281,140 @@ def ManageStaff():
     element("-")
     print("[1] Add New Staff Member")
     print("[2] View All Users")
-    print("[0] Add New Staff Member")
+    print("[0] Go Back")
     option = int(input("Enter Option: "))
     if option == 1:
         addNewStaff()
     elif option == 2:
         viewallUser()
+    else:
+        administratordashboard()
 
 
 def addNewStaff():
+    global userCount
     header("REGISTER NEW USER")
     element("-")
     
     while True:
         username = input("[1] Enter New Username:")
-        for i in range(userCount):
-            if userData[i][1] == username:
+        if userData[userCount][1] == username:
                 print(f"[ERROR] UserName {username} Already Exists!")
                 break   
-    password = input("[2] Enter Password:")
-    userrole = input("[3] Ty Rpeole:(Admin [A]/Receptionist [R] | Manager [M] | Worker[W])")
-    userData[userCount][0] = userCount
-    userData[userCount][1] = username
-    userData[userCount][2] = password
-    userData[userCount][3] = usernameusername
-    print(f"[SUCCESS] User= {username} Role= ({username}) created successfully!\n")
-    userCount += 1
+        else:
+            password = input("[2] Enter Password:")
+            userrole = input("[3] Ty Rpeole:(Admin [A]/Receptionist [R] | Manager [M] | Worker[W])")
+            userData[userCount][0] = userCount
+            userData[userCount][1] = username
+            userData[userCount][2] = password
+            userData[userCount][3] = userrole
+            print(f"[SUCCESS] User= {username} Role= ({username}) created successfully!\n")
+            userCount += 1
 
-    print("[1] Add Another")
-    print("[0] Go Back")
+            print("[1] Add Another")
+            print("[0] Go Back")
+            element("-")
+            option = int(input("Select Option: "))
+            if option == 1:
+                addNewStaff()
+                break
+            else:
+                ManageStaff()
+                break
+                
+    
+def viewallUser():
+    header("Hostel Management System")
+    print(f"{'[View All Staff]':^55}\n")
     element("-")
-    option = int(input("Select Option: "))
-    if option == 1:
-        addNewStaff()
-    else:
-        administratordashboard()
-       
+    print(f"{space:<4} {'Sr.':<10} {'Username':<10} {'Password':<10} {'Role':<10}")
+    element("-")
+    for i in range(userCount):
+        print(f"{space:<4} {userData[i][0]:<10} {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
+    element("-")
 
+    print("")
+    print(f"[Total Users: {userCount}]")
+    print("")
+    element("=")
+
+
+    while(True):
+        print("[1] Press [M] to Manage Staff")
+        print("[2] Press [X] to Go Back")    
+        option= input("Enter Option: ").upper()
+        if option.upper() == 'M':
+            managestaff()
+            break
+            
+        elif option.upper() == 'X':
+            administratordashboard()
+            break
+            
+        else:
+            print("Invalid Option! Try Again")
+
+def managestaff():
+    global roomCount
+    header("Manage Staff")
+    element("-")
+    print(f"{space:<4} {'Sr.':<10} {'Username':<10} {'Password':<10} {'Role':<10}")
+    element("-")
+    for i in range(userCount):
+        print(f"{space:<4} {userData[i][0]:<10} {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
+    element("-")
+
+    
+    Search_User_name = input("Enter User Name: ")
+    
+    for i in range(userCount):
+        if hotelData[i][1] == Search_User_name:
+            print("\n[User FOUND!]\n")
+            print(f"Current User: Name= {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
+            element("-")
+
+            element("-")
+            print("[1] Edit Data")
+            print("[2] Delete")
+            print("[0] Cancel")
+            option = int(input("Enter Option: "))
+            if option == 1:
+                print("\n--- UPDATE DETAILS ---")
+                New_username = input("Enter New Name) or Press Enter To Skip")
+                userData[i][1] = New_username
+                New_Role = int(input("Enter New Role Or Press Enter To Skip"))
+                userData[i][3] = New_Role
+                New_Password = int(input("Enter New Password Or Press Enter To Skip"))
+                userData[i][3] = New_Password
+
+                
+                print("\n[SUCCESS] Room details updated successfully!")
+                print(f"{space:<4} {userData[i][0]:<10} {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
+   
+
+            elif option == 2:
+                confirm = input(f"Are you sure you want to DELETE User {Search_User_name}? [Y/N]").upper()
+                if confirm.upper() == "Y":
+                    for j in range(New_username,roomCount-1):
+
+                        hotelData[j][0] = -1
+                        hotelData[j][1] = "HD"
+                        hotelData[j][2] = -11
+                    roomCount = roomCount-1
+                    
+                    print("\n[SUCCESS] Room deleted successfully.")
+                    viewAllRooms()
+                else:
+                    print("\n[CANCELLED] Deletion cancelled.")
+                    viewAllRooms()
+            else:
+                print("\n[INFO] Returned to menu.")
+                viewAllRooms()
+
+        else:
+            print(f"\n[ERROR] Room {Search_User_name} not found in List.")
+            return
+   
 
 def main():
     while(True):
