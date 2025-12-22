@@ -18,6 +18,7 @@ userData[0][2] = "1122"
 userData[0][3] = "Admin"
 
 def administratorlogin():
+
     header("Hostel Management System")
     print(f"{'[ AUTHENTICATION REQUIRED ]':^55}")
     print("\n")
@@ -52,6 +53,7 @@ def administratorlogin():
                 else:
                     print(f"Invalid Credentials! Try Again")
                     print(f"Remaining Attempts: {attempts}\n")
+
 def header(name):
     print("=" * 55)
     print(f"{name:^55}")
@@ -273,7 +275,6 @@ def manageRooms():
         print("\n[INFO] Returned to menu.")
         viewAllRooms()
 
-    
 def ManageStaff():
     global userCount
     header("STAFF MANAGEMENT PORTAL")
@@ -303,7 +304,7 @@ def addNewStaff():
                 break   
         else:
             password = input("[2] Enter Password:")
-            userrole = input("[3] Ty Rpeole:(Admin [A]/Receptionist [R] | Manager [M] | Worker[W])")
+            userrole = input("[3] Ty Rpeole:(Admin  | Receptionist | Manager | Worker)")
             userData[userCount][0] = userCount
             userData[userCount][1] = username
             userData[userCount][2] = password
@@ -368,42 +369,48 @@ def managestaff():
     Search_User_name = input("Enter User Name: ")
     
     for i in range(userCount):
-        if hotelData[i][1] == Search_User_name:
+        if userData[i][1] == Search_User_name:
             print("\n[User FOUND!]\n")
             print(f"Current User: Name= {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
-            element("-")
-
             element("-")
             print("[1] Edit Data")
             print("[2] Delete")
             print("[0] Cancel")
             option = int(input("Enter Option: "))
             if option == 1:
-                print("\n--- UPDATE DETAILS ---")
-                New_username = input("Enter New Name) or Press Enter To Skip")
-                userData[i][1] = New_username
-                New_Role = int(input("Enter New Role Or Press Enter To Skip"))
-                userData[i][3] = New_Role
-                New_Password = int(input("Enter New Password Or Press Enter To Skip"))
-                userData[i][3] = New_Password
-
-                
-                print("\n[SUCCESS] Room details updated successfully!")
+                print(f"{space:<4} {'Sr.':<10} {'Username':<10} {'Password':<10} {'Role':<10}")
                 print(f"{space:<4} {userData[i][0]:<10} {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
    
+                print("\n--- UPDATE DETAILS ---")
+
+                new_username = input("Enter New Username (press Enter to skip): ")
+                
+                if new_username != "":
+                    userData[i][1] = new_username
+
+                new_password = input("Enter New Password (press Enter to skip): ")
+                if new_password != "":
+                    userData[i][2] = new_password
+
+                new_role = input("Enter New Role (press Enter to skip): ")
+                if new_role != "":
+                    userData[i][3] = new_role
+
+                print("\n[SUCCESS] User details updated successfully!")
+                print(f"{space:<4} {userData[i][0]:<10} {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
 
             elif option == 2:
                 confirm = input(f"Are you sure you want to DELETE User {Search_User_name}? [Y/N]").upper()
+                confirm = confirm.upper()
                 if confirm.upper() == "Y":
-                    for j in range(New_username,roomCount-1):
-
-                        hotelData[j][0] = -1
-                        hotelData[j][1] = "HD"
-                        hotelData[j][2] = -11
-                    roomCount = roomCount-1
-                    
-                    print("\n[SUCCESS] Room deleted successfully.")
-                    viewAllRooms()
+                    for j in range(new_username,userCount-1):
+                        userData[j][0] = -1
+                        userData[j][1] = "U"
+                        userData[j][2] = "P"
+                        userData[j][2] = "R"
+                    userCount = userCount-1
+                    print("\n[SUCCESS] USER deleted successfully.")
+                    viewallUser()
                 else:
                     print("\n[CANCELLED] Deletion cancelled.")
                     viewAllRooms()
@@ -412,8 +419,8 @@ def managestaff():
                 viewAllRooms()
 
         else:
-            print(f"\n[ERROR] Room {Search_User_name} not found in List.")
-            return
+            print(f"\n[ERROR] User {Search_User_name} not found in List.")
+            break
    
 
 def main():
