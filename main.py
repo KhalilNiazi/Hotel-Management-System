@@ -101,7 +101,7 @@ def administratordashboard():
     elif option == 4:
         workerDuties()
     elif option == 5:
-        viewBooking():
+        viewBooking()
     elif option == 6:
         print("Financials")
     elif option == 7:
@@ -435,12 +435,12 @@ def managestaff():
 def workerDuties():
     header("WORKER DUTIES & TASK ASSIGNMENT")
     element("-")
-    print(f"{'Option':>10} {'Function':> 20}")
+    print(f"{'Option':<10} {'Function':<20}")
     element("-")
-    print(f"{'[1]':>10} {'Assign New Task':> 20}")
-    print(f"{'[2]':>10} {'View All Task':> 20}")
-    print(f"{'[3]':>10} {'Complete a Task':> 20}")
-    print(f"{'[0]':>10} {'Back':> 20}")
+    print(f"{'[1]':<10} {'Assign New Task':<20}")
+    print(f"{'[2]':<10} {'View All Task':<20}")
+    print(f"{'[3]':<10} {'Complete a Task':<20}")
+    print(f"{'[0]':<10} {'Back':<20}")
     element("-")
     option =  int(input("Enter Option: "))
     if option == 1:
@@ -463,8 +463,8 @@ def assignNewTask():
     print("[Available Staff]")
     found_worker = False
     for i in range(userCount):
-        if userCount[i][3] == "Worker":
-            print(f"{userData[i][1]:>10} {userData[i][3]}")
+        if userData[i][3] == "Worker":
+            print(f"{userData[i][1]:<10} {userData[i][3]:<3}")
             found_worker = True
         if not found_worker:
             print("No Staff with Role 'Worker' found")
@@ -488,21 +488,20 @@ def viewAllTask():
     global taskCount
     header("TASK LIST")
     element("-")
-    print(f"{'ID':>10} {'Staff Name':> 10} {'TASK':> 30} {'STATUS':> 10}")
+    print(f"{'ID':<10} {'Staff Name':<10} {'TASK':<30} {'STATUS':<10}")
     element("-")
     for i in range(taskCount):
-        print(f"{assignTask[i][0]:>10} {assignTask[i][1]:> 10} {assignTask[i][2]:> 30} {assignTask[i][3]:> 10}")
-        
+        print(f"{assignTask[i][0]:<10} {assignTask[i][1]:<10} {assignTask[i][2]:<30} {assignTask[i][3]:<10}")
     element("-")
     input("Press Enter to return...")
     workerDuties()
 
 def completeTask():
     header("UPDATE TASK STATUS")
-    print(f"{'ID':>10} {'Staff Name':> 10} {'TASK':> 30} {'STATUS':> 10}")
+    print(f"{'ID':<10} {'Staff Name':<10} {'TASK':<30} {'STATUS':<10}")
     element("-")
     for i in range(taskCount):
-        print(f"{assignTask[i][0]:>10} {assignTask[i][1]:> 10} {assignTask[i][2]:> 30} {assignTask[i][3]:> 10}")
+        print(f"{assignTask[i][0]:<10} {assignTask[i][1]:<10} {assignTask[i][2]:<30} {assignTask[i][3]:<10}")
         
     element("-")
     taskid = input("Enter Task ID to Complete:...")
@@ -510,17 +509,23 @@ def completeTask():
         assignTask[i][3] = "COMPLETED"
     input("Press Enter to return...")
     workerDuties()
-
-
-       
-
+MAX_GUEST = 10000
+guest_count = 0
+#Formate = [id,GuestName, Room NO, Phoneno, Status,CheckIn Timem, Check Out Time]
+guest_data = [[0,]]
+def viewBooking():
+    header("GUEST BOOKING RECORDS")
+    element("-")
+    print(f"{'ID':<5 } {'GUEST NAME':<30} {'ROOM NO':<10} {'PHONE NO':<10} {'STATUS':<10} {'Check IN':<5} {'Check OUt'}")
+    element('-')
+    for i in range
 def main():
     while(True):
         header("Hostel Management System")
         print("\nWelcome! Please select your role to access the system\n")
         print("-" * 55)
-        print(f"[1] ADMINISTRATOR{space:>10} [2] RECEPTIONIST")
-        print(f"[3] MANAGER{space:>16} [4] WORKER / STAFF")
+        print(f"[1] ADMINISTRATOR{space:<10} [2] RECEPTIONIST")
+        print(f"[3] MANAGER{space:<16} [4] WORKER / STAFF")
         print(f"[5] Exit")
         print("-"*55)
         option = int(input("Enter the Option (1-to-5): "))
