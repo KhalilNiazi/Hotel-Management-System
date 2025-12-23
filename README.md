@@ -108,8 +108,3 @@ This project is developed for academic learning and practical understanding of c
 * Improve reports and analytics  
 
 ---
-
-## Conclusion
-
-This project shows how Python file handling can be used to build a structured and efficient hotel management system.  
-It reduces manual work, improves accuracy, and can be extended in the future.
