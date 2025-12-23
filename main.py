@@ -9,7 +9,8 @@ hotelData = [[-1,"HD",-11] for _ in range(MAX_CAP)]
 #Adding UserData 2D Array
 MAX_USER = 50
 userCount = 1
-#Here U = Username, P = Password, R= Role
+#Here U = Username, P = Username, R= Role
+#Format: [usercount, Username, Username, Role]
 userData= [[-1,"U","P","R"] for _ in range(MAX_USER)]
 
 userData[0][0] = -1
@@ -17,6 +18,13 @@ userData[0][1] = "admin"
 userData[0][2] = "1122"
 userData[0][3] = "Admin"
 
+#Adding Task 2D Array
+MAX_TASK = 1000
+taskCount = 0
+#Format: [TaskID, StaffName, Description, Status]
+assignTask = [[0,"SN","TD","Pending"] for _ in range(MAX_TASK)]
+
+#Admin Login
 def administratorlogin():
 
     header("Hostel Management System")
@@ -91,9 +99,9 @@ def administratordashboard():
     elif option == 3:
         ManageStaff()
     elif option == 4:
-        print("Worder Duties")
+        workerDuties()
     elif option == 5:
-        print("View Booking")
+        viewBooking():
     elif option == 6:
         print("Financials")
     elif option == 7:
@@ -163,6 +171,7 @@ def is_valid_room_number(room):
         return False
     else:
         return True
+
 def get_room_type_name(type):
     if type == 'S':
         return "Single"
@@ -207,6 +216,7 @@ def viewAllRooms():
             
         else:
             print("Invalid Option! Try Again")
+#Manage Rooms Function
 def manageRooms():
     global roomCount
     header("Manage Rooms")
@@ -274,7 +284,7 @@ def manageRooms():
     else:
         print("\n[INFO] Returned to menu.")
         viewAllRooms()
-
+#Manage Staff Members
 def ManageStaff():
     global userCount
     header("STAFF MANAGEMENT PORTAL")
@@ -290,8 +300,7 @@ def ManageStaff():
         viewallUser()
     else:
         administratordashboard()
-
-
+#Add New Staff Member 
 def addNewStaff():
     global userCount
     header("REGISTER NEW USER")
@@ -305,6 +314,7 @@ def addNewStaff():
         else:
             password = input("[2] Enter Password:")
             userrole = input("[3] Ty Rpeole:(Admin  | Receptionist | Manager | Worker)")
+            
             userData[userCount][0] = userCount
             userData[userCount][1] = username
             userData[userCount][2] = password
@@ -323,7 +333,7 @@ def addNewStaff():
                 ManageStaff()
                 break
                 
-    
+#List Of all Users 
 def viewallUser():
     header("Hostel Management System")
     print(f"{'[View All Staff]':^55}\n")
@@ -354,9 +364,9 @@ def viewallUser():
             
         else:
             print("Invalid Option! Try Again")
-
+#Manage Staff Members
 def managestaff():
-    global roomCount
+    global userCount
     header("Manage Staff")
     element("-")
     print(f"{space:<4} {'Sr.':<10} {'Username':<10} {'Password':<10} {'Role':<10}")
@@ -422,6 +432,87 @@ def managestaff():
             print(f"\n[ERROR] User {Search_User_name} not found in List.")
             break
    
+def workerDuties():
+    header("WORKER DUTIES & TASK ASSIGNMENT")
+    element("-")
+    print(f"{'Option':>10} {'Function':> 20}")
+    element("-")
+    print(f"{'[1]':>10} {'Assign New Task':> 20}")
+    print(f"{'[2]':>10} {'View All Task':> 20}")
+    print(f"{'[3]':>10} {'Complete a Task':> 20}")
+    print(f"{'[0]':>10} {'Back':> 20}")
+    element("-")
+    option =  int(input("Enter Option: "))
+    if option == 1:
+        assignNewTask()
+    elif option == 2:
+        viewAllTask()
+    elif option == 3:
+        completeTask()
+    elif option == 0:
+        administratordashboard()
+    else:
+        print("Invalid Opiton!")
+
+  
+#Assign Task To Worker
+def assignNewTask():
+    global taskCount
+    global userCount
+    header("Assign New Task")
+    print("[Available Staff]")
+    found_worker = False
+    for i in range(userCount):
+        if userCount[i][3] == "Worker":
+            print(f"{userData[i][1]:>10} {userData[i][3]}")
+            found_worker = True
+        if not found_worker:
+            print("No Staff with Role 'Worker' found")
+        print("")
+
+    staffName= input("Enter Staff Name to Assign: ")
+    taskDetail = input("Enter Task Description: ")
+    
+    assignTask[i][0] = taskCount+1
+    assignTask[i][1] = staffName
+    assignTask[i][2] = taskDetail
+    assignTask[i][3] = "Pending"
+    
+    print(f"[SUCCESS] Task Assigned to {staffName}")
+    input("\nPress Enter To Reture...")
+    workerDuties()
+
+#View All Task
+def viewAllTask():
+    
+    global taskCount
+    header("TASK LIST")
+    element("-")
+    print(f"{'ID':>10} {'Staff Name':> 10} {'TASK':> 30} {'STATUS':> 10}")
+    element("-")
+    for i in range(taskCount):
+        print(f"{assignTask[i][0]:>10} {assignTask[i][1]:> 10} {assignTask[i][2]:> 30} {assignTask[i][3]:> 10}")
+        
+    element("-")
+    input("Press Enter to return...")
+    workerDuties()
+
+def completeTask():
+    header("UPDATE TASK STATUS")
+    print(f"{'ID':>10} {'Staff Name':> 10} {'TASK':> 30} {'STATUS':> 10}")
+    element("-")
+    for i in range(taskCount):
+        print(f"{assignTask[i][0]:>10} {assignTask[i][1]:> 10} {assignTask[i][2]:> 30} {assignTask[i][3]:> 10}")
+        
+    element("-")
+    taskid = input("Enter Task ID to Complete:...")
+    if taskid == assignTask[i][0]:
+        assignTask[i][3] = "COMPLETED"
+    input("Press Enter to return...")
+    workerDuties()
+
+
+       
 
 def main():
     while(True):
