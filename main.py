@@ -24,6 +24,13 @@ taskCount = 0
 #Format: [TaskID, StaffName, Description, Status]
 assignTask = [[0,"SN","TD","Pending"] for _ in range(MAX_TASK)]
 
+
+#Adding Guest Data Array
+MAX_GUEST = 10000
+guest_count = 0
+#Formate = [id,GuestName, Room NO, Phoneno, Status,CheckIn Timem, Check Out Time]
+guest_data = [[0,'GN','RN','PN','S','CI','CO'] for _ in range(MAX_GUEST)]
+
 #Admin Login
 def administratorlogin():
 
@@ -509,16 +516,116 @@ def completeTask():
         assignTask[i][3] = "COMPLETED"
     input("Press Enter to return...")
     workerDuties()
-MAX_GUEST = 10000
-guest_count = 0
-#Formate = [id,GuestName, Room NO, Phoneno, Status,CheckIn Timem, Check Out Time]
-guest_data = [[0,]]
+
 def viewBooking():
     header("GUEST BOOKING RECORDS")
     element("-")
-    print(f"{'ID':<5 } {'GUEST NAME':<30} {'ROOM NO':<10} {'PHONE NO':<10} {'STATUS':<10} {'Check IN':<5} {'Check OUt'}")
+    print(f"{'ID':<5} {'GUEST NAME':<30} {'ROOM NO':<10} {'PHONE NO':<10} {'STATUS':<10} {'Check IN':<5} {'Check OUt'}")
     element('-')
-    for i in range
+    for i in range(guest_count):
+        print(f" {' ':<3} {guest_data[i][0]:<5} {guest_data[i][1]:<30} {guest_data[i][2]:<10} {guest_data[i][3]:<10} {guest_data[i][4]:<10} {guest_data[i][5]:<5} {guest_data[i][6]}")
+    element
+
+    print(f"Total Active Guests: {guest_count}")
+    element("-")
+    print("[1] Add New Booking")
+    print("[0] Go Back")
+    element("-")
+    while True:
+        option = int(input("Enter the Option [1-or-0]"))
+        if option == 1:
+            addNewBooking()
+            break
+        elif option == 2:
+            administratordashboard()
+            break
+        else:
+            print("Invalid Option")
+
+def addNewBooking():
+
+    global guest_count
+    global roomCount
+    
+    header("Add New Booking")
+    print("[Avalible Rooms]")
+    element("-")
+    print(f"{'ROOM NO':<10} {'TYPE':<10} {'Price' :<10}")
+    element('-')
+    occupied_room = []
+
+    for k in range(guest_count):
+        #Formate = [id,GuestName, Room NO, Phoneno, Status,CheckIn Timem, Check Out Time]
+        #guest_data = [[0,'GN','RN','PN','S','CI','CO']
+        if guest_data[k][4] == "Active":
+            occupied_room.append(guest_data[k][2])
+       
+    element("-")
+    available_room_found = False
+    for i in range(roomCount):
+        current_room_No = hotelData[i][0]
+        if current_room_No != occupied_room:
+            print(f"{hotelData[i][0]:<10} {hotelData[i][1]:<10} {hotelData[i][2]:<10}")
+            available_room_found = True
+    if not available_room_found:
+        print("\n[!] No rooms are currently available.")
+        input("Press Enter to go back...")
+        return
+
+    element("-")
+    print("Enter '0' to Cancel")
+    guestName = input("Enter Guest Name: ")
+    if guestName == '0': return
+
+    guestPhoneNo = input("Enter Mobile Number: ")
+    guestCheckInTime = input("Enter CheckIn Date (e.g., 12/01/2026): ")
+
+    # --- STEP 3: SELECT AND VALIDATE ROOM ---
+    selected_room = -1
+    while True:
+        try:
+            room_input = int(input("Enter Room No to Book: "))
+            
+            # Check 1: Does the room exist in hotelData?
+            room_exists = False
+            for i in range(roomCount):
+                if hotelData[i][0] == room_input:
+                    room_exists = True
+                    break
+            
+            # Check 2: Is the room already occupied?
+            if room_input in occupied_rooms:
+                print(f"[ERROR] Room {room_input} is already occupied!")
+            elif not room_exists:
+                print(f"[ERROR] Room {room_input} does not exist in the hotel!")
+            else:
+                selected_room = room_input
+                break # Room is valid and free
+                
+        except ValueError:
+            print("[ERROR] Please enter a valid number.")
+
+    # --- STEP 4: SAVE DATA TO ARRAY ---
+    # Format: [id, GuestName, Room NO, Phoneno, Status, CheckIn Time, Check Out Time]
+    
+    guest_data[guest_count][0] = guest_count + 1        # ID
+    guest_data[guest_count][1] = guestName              # Name
+    guest_data[guest_count][2] = selected_room          # Room No
+    guest_data[guest_count][3] = guestPhoneNo           # Phone
+    guest_data[guest_count][4] = "Active"               # Status
+    guest_data[guest_count][5] = guestCheckInTime       # Check In
+    guest_data[guest_count][6] = "-"                    # Check Out (Pending)
+
+    guest_count += 1
+    
+    print("\n[SUCCESS] Booking Confirmed!")
+    print(f"Guest {guestName} assigned to Room {selected_room}")
+    
+    input("\nPress Enter to return...")
+    viewBooking()
+
+
+
 def main():
     while(True):
         header("Hostel Management System")
@@ -543,4 +650,4 @@ def main():
         else:
             print("Invalid Option")
 
-print(main())
+main()
