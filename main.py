@@ -1,3 +1,6 @@
+import datetime
+
+
 space = " "
 #Adding Room 2D Array
 MAX_CAP = 300
@@ -578,8 +581,11 @@ def addNewBooking():
     if guestName == '0': return
 
     guestPhoneNo = input("Enter Mobile Number: ")
-    guestCheckInTime = input("Enter CheckIn Date (e.g., 12/01/2026): ")
-
+    # --- CHANGED: AUTO-GENERATE DATE & TIME ---
+    # We get the current time and format it as Day/Month/Year Hour:Minute
+    now = datetime.datetime.now()
+    guestCheckInTime = now.strftime("%d/%m/%Y %H:%M")
+    print(f"Check-In Time set to: {guestCheckInTime}")
     # --- STEP 3: SELECT AND VALIDATE ROOM ---
     selected_room = -1
     while True:
@@ -594,7 +600,7 @@ def addNewBooking():
                     break
             
             # Check 2: Is the room already occupied?
-            if room_input in occupied_rooms:
+            if room_input in occupied_room:
                 print(f"[ERROR] Room {room_input} is already occupied!")
             elif not room_exists:
                 print(f"[ERROR] Room {room_input} does not exist in the hotel!")
