@@ -1,3 +1,22 @@
+// --- INIT ---
+(async function initSystem() {
+  try {
+    const res = await fetch(`${API_BASE}/api/settings`);
+    const conf = await res.json();
+
+    // Update Title and Brand
+    document.title = conf.name + " System";
+    const authBrand = document.getElementById("app-brand-auth");
+    if (authBrand) authBrand.innerText = conf.name;
+
+    const sideBrand = document.querySelector(".brand");
+    if (sideBrand)
+      sideBrand.innerHTML = `<ion-icon name="bed-outline"></ion-icon> ${conf.name}`;
+  } catch (e) {
+    console.log("Could not load settings");
+  }
+})();
+
 // --- CONFIG ---
 const API_BASE = window.location.port === "5500" ? "http://127.0.0.1:5000" : "";
 let currentUser = null;
@@ -184,7 +203,39 @@ async function loadView(viewType) {
     return;
   }
 
+  if (viewType === "settings") {
+    document.getElementById("page-heading").innerText = "System Settings";
+    // Fetch current settings
+    const res = await fetch(`${API_BASE}/api/settings`);
+    const conf = await res.json();
+
+    area.innerHTML = `
+          <div style="max-width:600px; background:white; padding:2rem; border-radius:10px; border:1px solid #e2e8f0;">
+              <form onsubmit="updateSettings(event)">
+                  <h3 class="section-title">General Configuration</h3>
+                  <div class="form-group">
+                      <label class="form-label">Hotel Name</label>
+                      <input class="form-input" name="name" value="${conf.name}" required>
+                      <small style="color:#64748b;">This name will appear on the dashboard and reports.</small>
+                  </div>
+                   <h3 class="section-title" style="margin-top:20px;">Other Options</h3>
+                  <div class="form-group">
+                      <label class="form-label">System Mode</label>
+                      <select class="form-select" disabled>
+                        <option>Production</option>
+                        <option>Maintenance</option>
+                      </select>
+                      <small style="color:#64748b;">Feature coming soon.</small>
+                  </div>
+                  <button class="btn btn-primary" type="submit">Save Changes</button>
+              </form>
+          </div>
+      `;
+    return;
+  }
+
   // --- TABLES (LISTS) ---
+
   searchCont.style.display = "block"; // Enable search for tables
 
   // Fetch Data
@@ -465,7 +516,26 @@ function markAllAttendance() {
   // Logic simplified for demo
 }
 
+async function updateSettings(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData.entries());
+
+  const res = await fetch(`${API_BASE}/api/settings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  const ret = await res.json();
+  alert(ret.message);
+  if (ret.status === "success") {
+    location.reload(); // Reload to reflect name change
+  }
+}
+
 // --- GENERAL POST ---
+
 async function postData(e, api, refreshView, manualData) {
   if (e) e.preventDefault();
   let data = manualData;

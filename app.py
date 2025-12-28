@@ -5,7 +5,11 @@ import datetime
 
 # Initialize Flask App
 # Serve static files from 'web' folder
-app = Flask(__name__, static_url_path='', static_folder='web', template_folder='web')
+
+# Initialize Flask App
+# Serve static files from current directory since 'web' folder was removed
+app = Flask(__name__, static_url_path='', static_folder='.', template_folder='.')
+
 CORS(app) # Enable CORS for all routes (to support port 5500 if needed)
 
 # Load data on start (Force reload to get new generated data)
@@ -312,7 +316,22 @@ def book_room():
     
     return jsonify({"status": "success"})
 
+
+@app.route('/api/settings', methods=['GET', 'POST'])
+def handle_settings():
+    if request.method == 'POST':
+        data = request.json
+        new_name = data.get('name')
+        if new_name:
+            backend.hotel_config['name'] = new_name
+            backend.save_settings()
+            return jsonify({"status": "success", "message": "Settings Updated"})
+        return jsonify({"status": "error", "message": "Invalid Name"})
+    else:
+        return jsonify(backend.hotel_config)
+
 @app.route('/api/mark_attendance', methods=['POST'])
+
 def mark_attendance():
     data = request.json
     name = data.get('username')

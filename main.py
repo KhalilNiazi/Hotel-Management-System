@@ -35,15 +35,29 @@ guest_data = [[0, 'GN', 'RN', 'PN', 'S', 'CI', 'CO', 0] for _ in range(MAX_GUEST
 MAX_ATTENDANCE = 10000
 attendance_count = 0
 # Format: [ID, WorkerName, Date, Status, TimeIn, TimeOut]
-attendanceData = [[0, 'WN', 'D', 'S', 'TI', 'TO'] for _ in range(MAX_ATTENDANCE)]
 
+# Settings
+hotel_config = {"name": "Luxe Stay"}
 
-# --- FILE HANDLING ---
+def load_settings():
+    global hotel_config
+    if os.path.exists("data/settings.txt"):
+        with open("data/settings.txt", "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.startswith("name="):
+                    hotel_config["name"] = line.strip().split("=")[1]
+
+def save_settings():
+    with open("data/settings.txt", "w") as f:
+        f.write(f"name={hotel_config['name']}\n")
 
 def load_data():
     global roomCount, userCount, taskCount, guest_count, attendance_count
+    load_settings()
     
     # Load Rooms
+
     if os.path.exists("data/rooms.txt"):
         with open("data/rooms.txt", "r") as f:
             lines = f.readlines()

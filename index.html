@@ -3,149 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Management Pro</title>
+    <title>Luxe Stay | Premium Hospitality</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Ionicons for Icons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
 <body>
 
-    <!-- SCREEN 1: PORTAL SELECTION / LOGIN (Auth Wrapper Style) -->
+    <!-- LOGIN / PORTAL SCREEN -->
     <div id="auth-screen" class="auth-wrapper screen active">
         <div class="auth-card">
             <div class="auth-header">
-                <div class="auth-logo">Luxe Stay</div>
-                <div class="auth-subtitle">Premium Hotel Management System</div>
+                <div class="auth-logo">
+                    <ion-icon name="diamond-outline" style="vertical-align:bottom; margin-right:10px;"></ion-icon>
+                    <span id="app-brand-auth">Luxe Stay</span>
+                </div>
+                <div class="auth-subtitle">Executive Management Suite</div>
             </div>
 
-            <!-- Role Grid -->
+            <!-- Role Selection -->
             <div id="role-view">
-                <h3 style="margin-bottom:20px; text-align:center;">Select Portal</h3>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                    <button class="btn btn-outline" onclick="showLoginInfo('Admin')">Administrator</button>
-                    <button class="btn btn-outline" onclick="showLoginInfo('Receptionist')">Receptionist</button>
-                    <button class="btn btn-outline" onclick="showLoginInfo('Manager')">Manager</button>
-                    <button class="btn btn-outline" onclick="showLoginInfo('Worker')">Worker</button>
+                <div class="role-grid">
+                    <button class="btn btn-outline" onclick="showLoginInfo('Admin')">
+                        <ion-icon name="key-outline" style="font-size:1.4em; margin-bottom:5px; display:block"></ion-icon> Admin
+                    </button>
+                    <button class="btn btn-outline" onclick="showLoginInfo('Receptionist')">
+                        <ion-icon name="desktop-outline" style="font-size:1.4em; margin-bottom:5px; display:block"></ion-icon> Reception
+                    </button>
+                    <button class="btn btn-outline" onclick="showLoginInfo('Manager')">
+                        <ion-icon name="briefcase-outline" style="font-size:1.4em; margin-bottom:5px; display:block"></ion-icon> Manager
+                    </button>
+                    <button class="btn btn-outline" onclick="showLoginInfo('Worker')">
+                        <ion-icon name="construct-outline" style="font-size:1.4em; margin-bottom:5px; display:block"></ion-icon> Staff
+                    </button>
                 </div>
             </div>
 
-            <!-- Login Form -->
-            <form id="login-form" style="display:none; margin-top:20px;">
+            <!-- Login Inputs -->
+            <form id="login-form" style="display:none; text-align:left;">
                 <input type="hidden" id="selected-role">
                 <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input type="text" id="username" class="form-input" required placeholder="Enter username">
+                    <label class="form-label">IDENTITY</label>
+                    <input type="text" id="username" class="form-input" required placeholder="Username">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" id="password" class="form-input" required placeholder="Enter password">
+                    <label class="form-label">CREDENTIAL</label>
+                    <input type="password" id="password" class="form-input" required placeholder="••••••••">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width:100%">Access Dashboard</button>
-                <button type="button" class="btn btn-outline" style="width:100%; margin-top:10px" onclick="backToRoles()">Back</button>
+                <button type="submit" class="btn btn-primary" style="width:100%">Authenticate</button>
+                <button type="button" class="btn btn-outline" style="width:100%; margin-top:15px; border:none;" onclick="backToRoles()">← Return</button>
             </form>
-            <p id="login-msg" style="text-align:center; margin-top:15px; font-size:0.9rem;"></p>
+            <p id="login-msg" style="margin-top:20px; color:#f87171;"></p>
         </div>
     </div>
 
-    <!-- SCREEN 2: MAIN DASHBOARD LAYOUT -->
+
+    <!-- DASHBOARD SCREEN -->
     <div id="main-dashboard" class="dashboard-layout screen">
         
-
-        <!-- SIDEBAR -->
+        <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="brand">
-                <ion-icon name="bed-outline"></ion-icon> Luxe Stay
+                <ion-icon name="diamond-outline"></ion-icon> Luxe Stay
             </div>
-            
+
+            <!-- Dynamic Menus (ID hooks for script.js) -->
             <nav class="nav-menu" id="admin-menu" style="display:none;">
-                <div class="nav-item active" onclick="loadStats()"><ion-icon name="grid-outline"></ion-icon> Dashboard</div>
-                <div class="nav-item" onclick="loadView('rooms')"><ion-icon name="key-outline"></ion-icon> Manage Rooms</div>
-                <div class="nav-item" onclick="loadView('staff')"><ion-icon name="people-outline"></ion-icon> Manage Staff</div>
-                <div class="nav-item" onclick="loadView('finance')"><ion-icon name="cash-outline"></ion-icon> Financials</div>
-                <div class="nav-item" onclick="loadView('attendance_report')"><ion-icon name="document-text-outline"></ion-icon> Attendance Report</div>
+                <div class="nav-item active" onclick="loadStats()"><span>Dashboard</span></div>
+                <div class="nav-item" onclick="loadView('rooms')"><span>Suites</span></div>
+                <div class="nav-item" onclick="loadView('staff')"><span>Personnel</span></div>
+                <div class="nav-item" onclick="loadView('finance')"><span>Revenue</span></div>
+                <div class="nav-item" onclick="loadView('attendance_report')"><span>Attendance</span></div>
+                <div class="nav-item" onclick="loadView('settings')"><span>Settings</span></div>
             </nav>
 
             <nav class="nav-menu" id="recept-menu" style="display:none;">
-                <div class="nav-item active" onclick="loadView('bookings')"><ion-icon name="calendar-outline"></ion-icon> Bookings</div>
-                <div class="nav-item" onclick="loadView('newbooking')"><ion-icon name="create-outline"></ion-icon> New Booking</div>
-                <div class="nav-item" onclick="loadView('rooms')"><ion-icon name="bed-outline"></ion-icon> Room Status</div>
-                <div class="nav-item" onclick="loadView('guest_edit')"><ion-icon name="pencil-outline"></ion-icon> Edit Guest</div>
+                <div class="nav-item active" onclick="loadView('bookings')"><span>Bookings</span></div>
+                <div class="nav-item" onclick="loadView('newbooking')"><span>New Reservation</span></div>
+                <div class="nav-item" onclick="loadView('rooms')"><span>Room List</span></div>
+                <div class="nav-item" onclick="loadView('guest_edit')"><span>Edit Guest</span></div>
             </nav>
 
             <nav class="nav-menu" id="worker-menu" style="display:none;">
-                <div class="nav-item active" onclick="loadWorkerTasks()"><ion-icon name="list-outline"></ion-icon> My Tasks</div>
-                <div class="nav-item" onclick="markAllAttendance()"><ion-icon name="time-outline"></ion-icon> Tools</div>
+                <div class="nav-item active" onclick="loadWorkerTasks()"><span>My Assignments</span></div>
+                <div class="nav-item" onclick="markAllAttendance()"><span>Check In/Out</span></div>
             </nav>
 
-             <nav class="nav-menu" id="manager-menu" style="display:none;">
-                <div class="nav-item active" onclick="loadView('attendance_report')"><ion-icon name="time-outline"></ion-icon> Attendance Report</div>
-                <div class="nav-item" onclick="loadView('finance')"><ion-icon name="pie-chart-outline"></ion-icon> Financials</div>
-                <div class="nav-item" onclick="loadView('rooms')"><ion-icon name="bed-outline"></ion-icon> View Rooms</div>
+            <nav class="nav-menu" id="manager-menu" style="display:none;">
+                <div class="nav-item active" onclick="loadView('attendance_report')"><span>Staff Logs</span></div>
+                <div class="nav-item" onclick="loadView('finance')"><span>Financials</span></div>
+                <div class="nav-item" onclick="loadView('rooms')"><span>Room Overview</span></div>
             </nav>
 
             <div class="user-profile">
-
-                <div class="avatar" id="user-initial">A</div>
-                <div class="user-info">
-                    <div style="font-weight:600" id="display-username">User</div>
-                    <div style="font-size:0.8rem; color:var(--text-secondary)" id="display-role">Admin</div>
+                <div class="avatar" id="user-initial">U</div>
+                <div>
+                    <div id="display-username" style="font-weight:bold; color:white;">User</div>
+                    <div id="display-role" style="font-size:0.8rem; color:#888;">Role</div>
                 </div>
-                <button onclick="logout()" style="margin-left:auto; background:none; border:none; color:white; cursor:pointer;"><ion-icon name="log-out-outline" size="large"></ion-icon></button>
+                <ion-icon name="log-out-outline" onclick="logout()" style="margin-left:auto; font-size:1.5rem; cursor:pointer; color:#d4af37;"></ion-icon>
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
+
+        <!-- Main Content Area -->
         <main class="main-content">
             <header class="header">
-                <h1 class="page-title" id="page-heading">Dashboard</h1>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn btn-outline" onclick="loadStats()"><ion-icon name="refresh-outline"></ion-icon></button>
+                <h1 class="page-title" id="page-heading">Overview</h1>
+                <div style="font-size:0.9rem; color:#aaa;">
+                    <span id="current-date"></span>
                 </div>
             </header>
 
-            <!-- STATS AREA (Admin Only) -->
-            <div id="stats-area" class="stats-grid" style="display:none;">
-                <!-- Populated via JS -->
-            </div>
-
-            <!-- SEARCH BAR (For lists) -->
-            <div id="search-container" style="margin-bottom:20px; display:none;">
-                <input type="text" id="search-input" class="form-input" placeholder="Search records..." onkeyup="filterTable()">
-            </div>
-
-            <!-- CONTENT AREA (Tables/Forms) -->
-            <div id="view-area" class="data-table-wrapper" style="display:none;">
-                <!-- Tables/Forms Injected Here -->
-            </div>
-
-            <!-- WORKER SPECIFIC -->
-            <div id="worker-area" style="display:none;"></div>
+            <div id="stats-area" class="stats-grid" style="display:none;"></div>
             
+            <div id="search-container" style="margin-bottom:20px; display:none;">
+                <input type="text" id="search-input" class="form-input" placeholder="Filter records..." onkeyup="filterTable()">
+            </div>
+
+            <div id="view-area" class="data-table-wrapper" style="display:none;"></div>
+            <div id="worker-area" style="display:none;"></div>
         </main>
     </div>
 
 
-    <!-- Edit Modal -->
+    <!-- EDIT MODAL (Global) -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-bottom:20px" id="modal-title">Edit Item</h3>
+            <h2 id="modal-title" style="font-family:'Playfair Display'; color:var(--gold-primary); margin-bottom:20px;">Edit Record</h2>
             <form onsubmit="submitEdit(event)">
-                <input type="hidden" id="edit-id">
-                <input type="hidden" id="edit-type">
-                <div class="form-group" id="edit-field-group">
-                    <label class="form-label">New Value</label>
+                <input type="hidden" id="edit-id"><input type="hidden" id="edit-type">
+                <div class="form-group">
+                    <label class="form-label" style="text-transform:uppercase;">New Value</label>
                     <input class="form-input" id="edit-val" required>
                 </div>
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button type="submit" class="btn btn-primary" style="flex:1">Save</button>
-                    <button type="button" class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:30px;">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script src="script.js"></script>
+    <script>
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    </script>
 </body>
-
 </html>
