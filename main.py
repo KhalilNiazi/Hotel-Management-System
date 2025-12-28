@@ -1,76 +1,180 @@
 import datetime
-
+import os
 
 space = " "
-#Adding Room 2D Array
+
+# --- GLOBAL DATA STRUCTURES ---
+
+# Room Data
 MAX_CAP = 300
 roomCount = 0
-#here -1 = RoomNO, HD = Type, -11 = Price
-hotelData = [[-1,"HD",-11] for _ in range(MAX_CAP)]
+# Format: [RoomNO, Type, Price]
+hotelData = [[-1, "HD", -11] for _ in range(MAX_CAP)]
 
-
-#Adding UserData 2D Array
+# User Data
 MAX_USER = 50
 userCount = 1
-#Here U = Username, P = Username, R= Role
-#Format: [usercount, Username, Username, Role]
-userData= [[-1,"U","P","R"] for _ in range(MAX_USER)]
+# Format: [UserID, Username, Password, Role]
+userData = [[-1, "U", "P", "R"] for _ in range(MAX_USER)]
+# Default Admin (will be overwritten if file exists)
+userData[0] = [0, "admin", "1122", "Admin"]
 
-userData[0][0] = -1
-userData[0][1] = "admin"
-userData[0][2] = "1122"
-userData[0][3] = "Admin"
-
-#Adding Task 2D Array
+# Task Data
 MAX_TASK = 1000
 taskCount = 0
-#Format: [TaskID, StaffName, Description, Status]
-assignTask = [[0,"SN","TD","Pending"] for _ in range(MAX_TASK)]
+# Format: [TaskID, StaffName, Description, Status]
+assignTask = [[0, "SN", "TD", "Pending"] for _ in range(MAX_TASK)]
 
-
-#Adding Guest Data Array
+# Guest Data
 MAX_GUEST = 10000
 guest_count = 0
-#Formate = [id,GuestName, Room NO, Phoneno, Status,CheckIn Timem, Check Out Time]
-guest_data = [[0,'GN','RN','PN','S','CI','CO'] for _ in range(MAX_GUEST)]
+# Format: [id, GuestName, RoomNO, Phone, Status, CheckIn, CheckOut, BillAmount]
+guest_data = [[0, 'GN', 'RN', 'PN', 'S', 'CI', 'CO', 0] for _ in range(MAX_GUEST)]
 
-#Admin Login
-def administratorlogin():
+# Attendance Data
+MAX_ATTENDANCE = 10000
+attendance_count = 0
+# Format: [ID, WorkerName, Date, Status, TimeIn, TimeOut]
+attendanceData = [[0, 'WN', 'D', 'S', 'TI', 'TO'] for _ in range(MAX_ATTENDANCE)]
 
-    header("Hostel Management System")
-    print(f"{'[ AUTHENTICATION REQUIRED ]':^55}")
-    print("\n")
-    element("-")
-    attempts = 3 
-    while(True):
-        print("Enter X to go back\n")
-        username = input("Enter UserName: ")
-        if username.lower() == 'x':
-            print("Returning to previous menu...")
-            main()
-            return
-        
-        password = input("Enter Password: ")
-        
-        if password.lower() == 'x':
-            print("Returning to previous menu...")
-            main()
-            return
 
+# --- FILE HANDLING ---
+
+def load_data():
+    global roomCount, userCount, taskCount, guest_count, attendance_count
+    
+    # Load Rooms
+    if os.path.exists("data/rooms.txt"):
+        with open("data/rooms.txt", "r") as f:
+            lines = f.readlines()
+            idx = 0
+            for line in lines:
+                data = line.strip().split(',')
+                if len(data) >= 3 and idx < MAX_CAP:
+                    hotelData[idx][0] = int(data[0])
+                    hotelData[idx][1] = data[1]
+                    hotelData[idx][2] = int(data[2])
+                    idx += 1
+            roomCount = idx
+
+
+    # Load Users
+    if os.path.exists("data/users.txt"):
+        with open("data/users.txt", "r") as f:
+            lines = f.readlines()
+            idx = 0
+            for line in lines:
+                data = line.strip().split(',')
+                # Format: ID,Username,Password,Role,Salary
+                if len(data) >= 4 and idx < MAX_USER:
+                    userData[idx][0] = int(data[0])
+                    userData[idx][1] = data[1]
+                    userData[idx][2] = data[2]
+                    userData[idx][3] = data[3]
+                    
+                    # Ensure the inner list is big enough or append
+                    # Original init was [-1, "U", "P", "R"] length 4
+                    # We extend it to length 5 for salary if needed
+                    while len(userData[idx]) < 5:
+                        userData[idx].append("0")
+                    
+                    if len(data) > 4:
+                        userData[idx][4] = data[4]
+                    else:
+                        userData[idx][4] = "0"
+                    
+                    idx += 1
+            userCount = idx
+
+
+    # Load Tasks
+    if os.path.exists("data/tasks.txt"):
+        with open("data/tasks.txt", "r") as f:
+            lines = f.readlines()
+            idx = 0
+            for line in lines:
+                data = line.strip().split(',')
+                if len(data) >= 4 and idx < MAX_TASK:
+                    assignTask[idx][0] = int(data[0])
+                    assignTask[idx][1] = data[1]
+                    assignTask[idx][2] = data[2]
+                    assignTask[idx][3] = data[3]
+                    idx += 1
+            taskCount = idx
+
+    # Load Guests
+    if os.path.exists("data/guests.txt"):
+        with open("data/guests.txt", "r") as f:
+            lines = f.readlines()
+            idx = 0
+            for line in lines:
+                data = line.strip().split(',')
+                # Support legacy/shorter lines just in case
+                if len(data) >= 7 and idx < MAX_GUEST:
+                    guest_data[idx][0] = int(data[0])
+                    guest_data[idx][1] = data[1]
+                    guest_data[idx][2] = int(data[2])
+                    guest_data[idx][3] = data[3]
+                    guest_data[idx][4] = data[4]
+                    guest_data[idx][5] = data[5]
+                    guest_data[idx][6] = data[6]
+                    if len(data) > 7:
+                        guest_data[idx][7] = int(data[7])
+                    else:
+                        guest_data[idx][7] = 0
+                    idx += 1
+            guest_count = idx
+            
+    # Load Attendance
+    if os.path.exists("data/attendance.txt"):
+        with open("data/attendance.txt", "r") as f:
+            lines = f.readlines()
+            idx = 0
+            for line in lines:
+                data = line.strip().split(',')
+                if len(data) >= 6 and idx < MAX_ATTENDANCE:
+                    attendanceData[idx][0] = int(data[0])
+                    attendanceData[idx][1] = data[1]
+                    attendanceData[idx][2] = data[2]
+                    attendanceData[idx][3] = data[3]
+                    attendanceData[idx][4] = data[4]
+                    attendanceData[idx][5] = data[5]
+                    idx += 1
+            attendance_count = idx
+
+def save_data():
+    # Save Rooms
+    with open("data/rooms.txt", "w") as f:
+        for i in range(roomCount):
+            f.write(f"{hotelData[i][0]},{hotelData[i][1]},{hotelData[i][2]}\n")
+
+
+    # Save Users
+    with open("data/users.txt", "w") as f:
         for i in range(userCount):
-            if username == userData[i][1] and password == userData[i][2]:
-                element("-")
-                print("\nLogin Successful!\n")
-                administratordashboard()
-                return   
-            else:
-                attempts = attempts-1
-                if attempts == 0:
-                    print("No More Attempts Left")
-                    break
-                else:
-                    print(f"Invalid Credentials! Try Again")
-                    print(f"Remaining Attempts: {attempts}\n")
+            # Check length for salary
+            salary = "0"
+            if len(userData[i]) > 4:
+                salary = str(userData[i][4])
+            f.write(f"{userData[i][0]},{userData[i][1]},{userData[i][2]},{userData[i][3]},{salary}\n")
+
+
+    # Save Tasks
+    with open("data/tasks.txt", "w") as f:
+        for i in range(taskCount):
+            f.write(f"{assignTask[i][0]},{assignTask[i][1]},{assignTask[i][2]},{assignTask[i][3]}\n")
+
+    # Save Guests
+    with open("data/guests.txt", "w") as f:
+        for i in range(guest_count):
+            f.write(f"{guest_data[i][0]},{guest_data[i][1]},{guest_data[i][2]},{guest_data[i][3]},{guest_data[i][4]},{guest_data[i][5]},{guest_data[i][6]},{guest_data[i][7]}\n")
+            
+    # Save Attendance
+    with open("data/attendance.txt", "w") as f:
+        for i in range(attendance_count):
+            f.write(f"{attendanceData[i][0]},{attendanceData[i][1]},{attendanceData[i][2]},{attendanceData[i][3]},{attendanceData[i][4]},{attendanceData[i][5]}\n")
+
+# --- UTILS ---
 
 def header(name):
     print("=" * 55)
@@ -79,98 +183,6 @@ def header(name):
 
 def element(dash):
     print(dash * 55)
-#Admin Login Funciton
-def roomtypes():
-    print("AVAILABLE ROOM TYPES:")
-    print("Single[S]  (1 Bed,  Max 1 Person)")
-    print("Double[D]  (1 Bed,  Max 2 Persons)")
-    print("Twin[T]    (2 Beds, Max 2 Persons)")
-    print("Suite[ST]  (Luxury, Max 4 Persons)")
-#Admin Dashboard
-def administratordashboard():
-    header("ADMINISTRATOR DASHBOARD")
-    element("-")
-    print(f"{'Option':<8} {'Function':<20}{'Option':<9} {'Function':<20}")
-    
-    element("-")
-    print(f"{'[1]':<8} {'Add Rooms':<20} {'[2]':<8} {'View All Rooms':<20}")
-    print(f"{'[3]':<8} {'Manage Staff':<20} {'[4]':<8} {'Worker Duties':<20}")
-    print(f"{'[5]':<8} {'View Booking':<20} {'[6]':<8} {'Financials':<20}")
-    print(f"{'[7]':<8} {'Attendance':<20} {'[8]':<8} {'System Stats':<20}")
-    print(f"{'[0]':<8} {'Logout':<20}")
-
-
-    element("-")
-    option = int(input("Enter the Option (0-to-8): "))
-    if option == 1:
-        addroom()
-    elif option == 2:
-        viewAllRooms()
-    elif option == 3:
-        ManageStaff()
-    elif option == 4:
-        workerDuties()
-    elif option == 5:
-        viewBooking()
-    elif option == 6:
-        print("Financials")
-    elif option == 7:
-        print("Attendance")
-    elif option == 8:
-        print("System Stats")
-    elif option == 0:
-        return
-    else:
-        print("Invalid Option")
-#Adding Rooms Function
-def addroom():
-    global roomCount
-    header("Hostel Management System")
-    print(f"{'[ADD NEW ROOM]':^55}\n")
-    print('"Enter the details below to register a new room in the system."')    
-    element("-")
-    roomtypes()
-    element("-")
-    while True:
-        try:
-            New_RoomNO = int(input(f"Room No[1-to-{MAX_CAP}]: "))
-            
-            if is_valid_room_number(New_RoomNO):
-                exists = False
-                for i in range(roomCount):
-                    if hotelData[i][0] == New_RoomNO:
-                        print(f"[ERROR] Room {New_RoomNO} Already Exists!")
-                        exists = True
-                        break
-                if not exists:
-                    break
-        except ValueError:
-            print("[ERROR] Invalid Input. Please enter a number.")
-    Room_Type = ""
-    while True:
-        New_RoomType = input("Enter Room Type (S/D/T/ST): ").upper()
-        New_RoomType= New_RoomType.upper()
-        result = get_room_type_name(New_RoomType)
-        if result != None:
-            Room_Type = result
-            break  
-       
-    New_RoomPrice = int(input("Enter Price Per Night (PKR): "))
-   
-    hotelData[roomCount][0] = New_RoomNO
-    hotelData[roomCount][1] = Room_Type
-    hotelData[roomCount][2] = New_RoomPrice
-    print(f"[SUCCESS] Room {New_RoomNO} ({Room_Type}) created successfully!\n")
-    roomCount += 1
-
-    print("[1] Add Another")
-    print("[0] Go Back")
-    element("-")
-    option = int(input("Select Option: "))
-    if option == 1:
-        addroom()
-    else:
-        administratordashboard()
 
 def is_valid_room_number(room):
     if room > int(MAX_CAP):
@@ -183,457 +195,503 @@ def is_valid_room_number(room):
         return True
 
 def get_room_type_name(type):
-    if type == 'S':
-        return "Single"
-    elif  type == 'D':
-       return "Double"
-    elif  type == 'T':
-        return "Triple"
-    elif type== 'ST':
-        return "Suite"
+    if type == 'S': return "Single"
+    elif type == 'D': return "Double"
+    elif type == 'T': return "Triple"
+    elif type == 'ST': return "Suite"
     else:
-       print("[ERROR] Invalid Room Type. Please use S, D, T, or ST.")
-       return None
-#list of All room
-def viewAllRooms():
-    global roomCount
+        print("[ERROR] Invalid Room Type. Please use S, D, T, or ST.")
+        return None
+
+# --- ADMIN FUNCTIONS ---
+
+def administratorlogin():
     header("Hostel Management System")
-    print(f"{'[ROOM INVENTORY LIST]':^55}\n")
+    print(f"{'[ AUTHENTICATION REQUIRED ]':^55}\n")
     element("-")
-    print(f"{space:<4} {'ROOM NO':<10} {'TYPE':<20} PRICE (PKR)")
-    element("-")
-    for i in range(roomCount):
-        print(f"{space:<4} {hotelData[i][0]:<10} {hotelData[i][1]:<20} {hotelData[i][2]}")
-    element("-")
-
-    print("")
-    print(f"[Total Rooms: {roomCount}]")
-    print("")
-    element("=")
-
-
-    while(True):
-        print("[1] Press [M] to Manage Rooms")
-        print("[2] Press [X] to Go Back")    
-        option= input("Enter Option: ").upper()
-        if option.upper() == 'M':
-            manageRooms()
-            break
-            
-        elif option.upper() == 'X':
-            administratordashboard()
-            break
-            
-        else:
-            print("Invalid Option! Try Again")
-#Manage Rooms Function
-def manageRooms():
-    global roomCount
-    header("Manage Rooms")
-    element("-")
-    print(f"{space:<4} {'ROOM NO':<10} {'TYPE':<20} PRICE (PKR)")
-    element("-")
-    for i in range(roomCount):
-        print(f"{space:<4} {hotelData[i][0]:<10} {hotelData[i][1]:<20} {hotelData[i][2]}")
-    element("-")
-    
-    Search_Room_No = input("Enter Room No: ")
-    
-    found_index = -1
-    for i in range(roomCount):
-        if hotelData[i][0] == Search_Room_No:
-            found_index = i
-            break
-    if found_index == -1:
-        print(f"\n[ERROR] Room {Search_Room_No} not found in List.")
-        return
-    print("\n[ROOM FOUND!]")
-    print(f"Current Data: TYPE={hotelData[found_index][1]:<4}| PRICE={hotelData[found_index][2]}")
-    element("-")
-    print("[1] Edit Data")
-    print("[2] Delete")
-    print("[0] Cancel")
-    option = int(input("Enter Option: "))
-    if option == 1:
-        print("\n--- UPDATE DETAILS ---")
-        roomtypes()
-        New_RoomType = input("Enter New Type (S/D/T/ST) or Press Enter To Skip")
-        if (New_RoomType != ""):
-            if New_RoomType.upper() == 'S':
-                hotelData[found_index][1] = "Single"
-            elif  New_RoomType.upper() == 'D':
-                hotelData[found_index][1] = "Double"
-            elif  New_RoomType.upper() == 'T' :
-                hotelData[found_index][1] = "Triple"
-            elif New_RoomType.upper() == 'ST':
-                hotelData[found_index][1] = "Suite"
-        New_Room_Price = int(input("Enter New Price Or Press Enter To Skip"))
-        if (New_Room_Price != 0):
-            hotelData[found_index][2] = New_Room_Price
-
-        
-        print("\n[SUCCESS] Room details updated successfully!")
-        print(f"{space:<4} {hotelData[found_index][0]:<10} {hotelData[found_index][1]:<20} {hotelData[i][2]}")
-    
-
-    elif option == 2:
-        confirm = input(f"Are you sure you want to DELETE Room {Search_Room_No}? [Y/N]").upper()
-        if confirm.upper() == "Y":
-            for j in range(found_index,roomCount-1):
-
-                hotelData[j][0] = -1
-                hotelData[j][1] = "HD"
-                hotelData[j][2] = -11
-            roomCount = roomCount-1
-            
-            print("\n[SUCCESS] Room deleted successfully.")
-            viewAllRooms()
-        else:
-            print("\n[CANCELLED] Deletion cancelled.")
-            viewAllRooms()
-    else:
-        print("\n[INFO] Returned to menu.")
-        viewAllRooms()
-#Manage Staff Members
-def ManageStaff():
-    global userCount
-    header("STAFF MANAGEMENT PORTAL")
-    print(f"[Total Users={userCount}]")
-    element("-")
-    print("[1] Add New Staff Member")
-    print("[2] View All Users")
-    print("[0] Go Back")
-    option = int(input("Enter Option: "))
-    if option == 1:
-        addNewStaff()
-    elif option == 2:
-        viewallUser()
-    else:
-        administratordashboard()
-#Add New Staff Member 
-def addNewStaff():
-    global userCount
-    header("REGISTER NEW USER")
-    element("-")
-    
+    attempts = 3 
     while True:
-        username = input("[1] Enter New Username:")
-        if userData[userCount][1] == username:
-                print(f"[ERROR] UserName {username} Already Exists!")
-                break   
-        else:
-            password = input("[2] Enter Password:")
-            userrole = input("[3] Ty Rpeole:(Admin  | Receptionist | Manager | Worker)")
-            
-            userData[userCount][0] = userCount
-            userData[userCount][1] = username
-            userData[userCount][2] = password
-            userData[userCount][3] = userrole
-            print(f"[SUCCESS] User= {username} Role= ({username}) created successfully!\n")
-            userCount += 1
-
-            print("[1] Add Another")
-            print("[0] Go Back")
-            element("-")
-            option = int(input("Select Option: "))
-            if option == 1:
-                addNewStaff()
-                break
-            else:
-                ManageStaff()
-                break
-                
-#List Of all Users 
-def viewallUser():
-    header("Hostel Management System")
-    print(f"{'[View All Staff]':^55}\n")
-    element("-")
-    print(f"{space:<4} {'Sr.':<10} {'Username':<10} {'Password':<10} {'Role':<10}")
-    element("-")
-    for i in range(userCount):
-        print(f"{space:<4} {userData[i][0]:<10} {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
-    element("-")
-
-    print("")
-    print(f"[Total Users: {userCount}]")
-    print("")
-    element("=")
-
-
-    while(True):
-        print("[1] Press [M] to Manage Staff")
-        print("[2] Press [X] to Go Back")    
-        option= input("Enter Option: ").upper()
-        if option.upper() == 'M':
-            managestaff()
-            break
-            
-        elif option.upper() == 'X':
-            administratordashboard()
-            break
-            
-        else:
-            print("Invalid Option! Try Again")
-#Manage Staff Members
-def managestaff():
-    global userCount
-    header("Manage Staff")
-    element("-")
-    print(f"{space:<4} {'Sr.':<10} {'Username':<10} {'Password':<10} {'Role':<10}")
-    element("-")
-    for i in range(userCount):
-        print(f"{space:<4} {userData[i][0]:<10} {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
-    element("-")
-
-    
-    Search_User_name = input("Enter User Name: ")
-    
-    for i in range(userCount):
-        if userData[i][1] == Search_User_name:
-            print("\n[User FOUND!]\n")
-            print(f"Current User: Name= {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
-            element("-")
-            print("[1] Edit Data")
-            print("[2] Delete")
-            print("[0] Cancel")
-            option = int(input("Enter Option: "))
-            if option == 1:
-                print(f"{space:<4} {'Sr.':<10} {'Username':<10} {'Password':<10} {'Role':<10}")
-                print(f"{space:<4} {userData[i][0]:<10} {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
-   
-                print("\n--- UPDATE DETAILS ---")
-
-                new_username = input("Enter New Username (press Enter to skip): ")
-                
-                if new_username != "":
-                    userData[i][1] = new_username
-
-                new_password = input("Enter New Password (press Enter to skip): ")
-                if new_password != "":
-                    userData[i][2] = new_password
-
-                new_role = input("Enter New Role (press Enter to skip): ")
-                if new_role != "":
-                    userData[i][3] = new_role
-
-                print("\n[SUCCESS] User details updated successfully!")
-                print(f"{space:<4} {userData[i][0]:<10} {userData[i][1]:<10} {userData[i][2]:10} {userData[i][3]:20}")
-
-            elif option == 2:
-                confirm = input(f"Are you sure you want to DELETE User {Search_User_name}? [Y/N]").upper()
-                confirm = confirm.upper()
-                if confirm.upper() == "Y":
-                    for j in range(new_username,userCount-1):
-                        userData[j][0] = -1
-                        userData[j][1] = "U"
-                        userData[j][2] = "P"
-                        userData[j][2] = "R"
-                    userCount = userCount-1
-                    print("\n[SUCCESS] USER deleted successfully.")
-                    viewallUser()
-                else:
-                    print("\n[CANCELLED] Deletion cancelled.")
-                    viewAllRooms()
-            else:
-                print("\n[INFO] Returned to menu.")
-                viewAllRooms()
-
-        else:
-            print(f"\n[ERROR] User {Search_User_name} not found in List.")
-            break
-   
-def workerDuties():
-    header("WORKER DUTIES & TASK ASSIGNMENT")
-    element("-")
-    print(f"{'Option':<10} {'Function':<20}")
-    element("-")
-    print(f"{'[1]':<10} {'Assign New Task':<20}")
-    print(f"{'[2]':<10} {'View All Task':<20}")
-    print(f"{'[3]':<10} {'Complete a Task':<20}")
-    print(f"{'[0]':<10} {'Back':<20}")
-    element("-")
-    option =  int(input("Enter Option: "))
-    if option == 1:
-        assignNewTask()
-    elif option == 2:
-        viewAllTask()
-    elif option == 3:
-        completeTask()
-    elif option == 0:
-        administratordashboard()
-    else:
-        print("Invalid Opiton!")
-
-  
-#Assign Task To Worker
-def assignNewTask():
-    global taskCount
-    global userCount
-    header("Assign New Task")
-    print("[Available Staff]")
-    found_worker = False
-    for i in range(userCount):
-        if userData[i][3] == "Worker":
-            print(f"{userData[i][1]:<10} {userData[i][3]:<3}")
-            found_worker = True
-        if not found_worker:
-            print("No Staff with Role 'Worker' found")
-        print("")
-
-    staffName= input("Enter Staff Name to Assign: ")
-    taskDetail = input("Enter Task Description: ")
-    
-    assignTask[i][0] = taskCount+1
-    assignTask[i][1] = staffName
-    assignTask[i][2] = taskDetail
-    assignTask[i][3] = "Pending"
-    
-    print(f"[SUCCESS] Task Assigned to {staffName}")
-    input("\nPress Enter To Reture...")
-    workerDuties()
-
-#View All Task
-def viewAllTask():
-    
-    global taskCount
-    header("TASK LIST")
-    element("-")
-    print(f"{'ID':<10} {'Staff Name':<10} {'TASK':<30} {'STATUS':<10}")
-    element("-")
-    for i in range(taskCount):
-        print(f"{assignTask[i][0]:<10} {assignTask[i][1]:<10} {assignTask[i][2]:<30} {assignTask[i][3]:<10}")
-    element("-")
-    input("Press Enter to return...")
-    workerDuties()
-
-def completeTask():
-    header("UPDATE TASK STATUS")
-    print(f"{'ID':<10} {'Staff Name':<10} {'TASK':<30} {'STATUS':<10}")
-    element("-")
-    for i in range(taskCount):
-        print(f"{assignTask[i][0]:<10} {assignTask[i][1]:<10} {assignTask[i][2]:<30} {assignTask[i][3]:<10}")
+        print("Enter X to go back\n")
+        username = input("Enter UserName: ")
+        if username.lower() == 'x': return
         
-    element("-")
-    taskid = input("Enter Task ID to Complete:...")
-    if taskid == assignTask[i][0]:
-        assignTask[i][3] = "COMPLETED"
-    input("Press Enter to return...")
-    workerDuties()
+        password = input("Enter Password: ")
+        if password.lower() == 'x': return
 
-def viewBooking():
-    header("GUEST BOOKING RECORDS")
-    element("-")
-    print(f"{'ID':<5} {'GUEST NAME':<30} {'ROOM NO':<10} {'PHONE NO':<10} {'STATUS':<10} {'Check IN':<5} {'Check OUt'}")
-    element('-')
-    for i in range(guest_count):
-        print(f" {' ':<3} {guest_data[i][0]:<5} {guest_data[i][1]:<30} {guest_data[i][2]:<10} {guest_data[i][3]:<10} {guest_data[i][4]:<10} {guest_data[i][5]:<5} {guest_data[i][6]}")
-    element
+        for i in range(userCount):
+            if username == userData[i][1] and password == userData[i][2] and userData[i][3] == "Admin":
+                element("-")
+                print("\nLogin Successful!\n")
+                administratordashboard()
+                return   
+        
+        attempts -= 1
+        if attempts == 0:
+            print("No More Attempts Left")
+            break
+        print(f"Invalid Credentials or Access Denied! Remaining Attempts: {attempts}\n")
 
-    print(f"Total Active Guests: {guest_count}")
-    element("-")
-    print("[1] Add New Booking")
-    print("[0] Go Back")
-    element("-")
+def administratordashboard():
     while True:
-        option = int(input("Enter the Option [1-or-0]"))
-        if option == 1:
-            addNewBooking()
-            break
-        elif option == 2:
-            administratordashboard()
-            break
-        else:
-            print("Invalid Option")
+        header("ADMINISTRATOR DASHBOARD")
+        element("-")
+        print(f"{'[1]':<8} {'Add Rooms':<20} {'[2]':<8} {'View All Rooms':<20}")
+        print(f"{'[3]':<8} {'Manage Staff':<20} {'[4]':<8} {'Worker Duties':<20}")
+        print(f"{'[5]':<8} {'View Booking':<20} {'[6]':<8} {'Financials/Bill Report':<20}")
+        print(f"{'[7]':<8} {'Attendance':<20} {'[8]':<8} {'System Stats':<20}")
+        print(f"{'[0]':<8} {'Logout':<20}")
+        element("-")
+        
+        try:
+            option = int(input("Enter the Option (0-to-8): "))
+            if option == 1: addroom()
+            elif option == 2: viewAllRooms()
+            elif option == 3: ManageStaff()
+            elif option == 4: workerDuties()
+            elif option == 5: viewBooking()
+            elif option == 6: viewBillingReport()
+            elif option == 7: viewAttendanceReport()
+            elif option == 8: viewSystemStats()
+            elif option == 0: return
+            else: print("Invalid Option")
+        except ValueError:
+            print("Invalid Input")
 
-def addNewBooking():
+def roomtypes():
+    print("AVAILABLE ROOM TYPES:")
+    print("Single[S]  (1 Bed,  Max 1 Person)")
+    print("Double[D]  (1 Bed,  Max 2 Persons)")
+    print("Twin[T]    (2 Beds, Max 2 Persons)")
+    print("Suite[ST]  (Luxury, Max 4 Persons)")
 
-    global guest_count
+def addroom():
     global roomCount
+    header("ADD NEW ROOM")
+    roomtypes()
     
-    header("Add New Booking")
-    print("[Avalible Rooms]")
-    element("-")
-    print(f"{'ROOM NO':<10} {'TYPE':<10} {'Price' :<10}")
-    element('-')
-    occupied_room = []
-
-    for k in range(guest_count):
-        #Formate = [id,GuestName, Room NO, Phoneno, Status,CheckIn Timem, Check Out Time]
-        #guest_data = [[0,'GN','RN','PN','S','CI','CO']
-        if guest_data[k][4] == "Active":
-            occupied_room.append(guest_data[k][2])
-       
-    element("-")
-    available_room_found = False
-    for i in range(roomCount):
-        current_room_No = hotelData[i][0]
-        if current_room_No != occupied_room:
-            print(f"{hotelData[i][0]:<10} {hotelData[i][1]:<10} {hotelData[i][2]:<10}")
-            available_room_found = True
-    if not available_room_found:
-        print("\n[!] No rooms are currently available.")
-        input("Press Enter to go back...")
-        return
-
-    element("-")
-    print("Enter '0' to Cancel")
-    guestName = input("Enter Guest Name: ")
-    if guestName == '0': return
-
-    guestPhoneNo = input("Enter Mobile Number: ")
-    # --- CHANGED: AUTO-GENERATE DATE & TIME ---
-    # We get the current time and format it as Day/Month/Year Hour:Minute
-    now = datetime.datetime.now()
-    guestCheckInTime = now.strftime("%d/%m/%Y %H:%M")
-    print(f"Check-In Time set to: {guestCheckInTime}")
-    # --- STEP 3: SELECT AND VALIDATE ROOM ---
-    selected_room = -1
     while True:
         try:
-            room_input = int(input("Enter Room No to Book: "))
-            
-            # Check 1: Does the room exist in hotelData?
-            room_exists = False
-            for i in range(roomCount):
-                if hotelData[i][0] == room_input:
-                    room_exists = True
-                    break
-            
-            # Check 2: Is the room already occupied?
-            if room_input in occupied_room:
-                print(f"[ERROR] Room {room_input} is already occupied!")
-            elif not room_exists:
-                print(f"[ERROR] Room {room_input} does not exist in the hotel!")
-            else:
-                selected_room = room_input
-                break # Room is valid and free
-                
+            New_RoomNO = int(input(f"Room No[1-to-{MAX_CAP}]: "))
+            if is_valid_room_number(New_RoomNO):
+                exists = False
+                for i in range(roomCount):
+                    if hotelData[i][0] == New_RoomNO:
+                        print(f"[ERROR] Room {New_RoomNO} Already Exists!")
+                        exists = True
+                        break
+                if not exists: break
         except ValueError:
-            print("[ERROR] Please enter a valid number.")
-
-    # --- STEP 4: SAVE DATA TO ARRAY ---
-    # Format: [id, GuestName, Room NO, Phoneno, Status, CheckIn Time, Check Out Time]
+            print("Invalid number.")
+            
+    Room_Type = ""
+    while True:
+        rt = input("Enter Room Type (S/D/T/ST): ").upper()
+        res = get_room_type_name(rt)
+        if res:
+            Room_Type = res
+            break
+            
+    try:
+        New_RoomPrice = int(input("Enter Price Per Night (PKR): "))
+    except ValueError:
+        New_RoomPrice = 0
+        
+    hotelData[roomCount][0] = New_RoomNO
+    hotelData[roomCount][1] = Room_Type
+    hotelData[roomCount][2] = New_RoomPrice
+    roomCount += 1
+    save_data() 
+    print(f"[SUCCESS] Room {New_RoomNO} Created!")
     
-    guest_data[guest_count][0] = guest_count + 1        # ID
-    guest_data[guest_count][1] = guestName              # Name
-    guest_data[guest_count][2] = selected_room          # Room No
-    guest_data[guest_count][3] = guestPhoneNo           # Phone
-    guest_data[guest_count][4] = "Active"               # Status
-    guest_data[guest_count][5] = guestCheckInTime       # Check In
-    guest_data[guest_count][6] = "-"                    # Check Out (Pending)
+    if input("[1] Add Another / [Any] Go Back: ") == '1':
+        addroom()
 
+def viewAllRooms():
+    header("ROOM INVENTORY LIST")
+    print(f"{'ROOM NO':<10} {'TYPE':<20} PRICE (PKR)")
+    element("-")
+    for i in range(roomCount):
+        print(f"{hotelData[i][0]:<10} {hotelData[i][1]:<20} {hotelData[i][2]}")
+    element("-")
+    
+    opt = input("[M] Manage Rooms / [X] Back: ").upper()
+    if opt == 'M': manageRooms()
+
+def manageRooms():
+    global roomCount
+    s_room = int(input("Enter Room No to Manage: "))
+    idx = -1
+    for i in range(roomCount):
+        if hotelData[i][0] == s_room:
+            idx = i
+            break
+    
+    if idx == -1:
+        print("Room not found.")
+        return
+        
+    print(f"Found: {hotelData[idx]}")
+    opt = input("[1] Edit / [2] Delete / [0] Cancel: ")
+    
+    if opt == '1':
+        rt = input("New Type (S/D/T/ST) or Enter to skip: ").upper()
+        if rt:
+            res = get_room_type_name(rt)
+            if res: hotelData[idx][1] = res
+            
+        rp = input("New Price or Enter to skip: ")
+        if rp: hotelData[idx][2] = int(rp)
+        save_data()
+        print("Updated.")
+        
+    elif opt == '2':
+        if input("Confirm Delete (Y/N): ").upper() == 'Y':
+            # Shift elements
+            for j in range(idx, roomCount - 1):
+                hotelData[j] = hotelData[j+1]
+                # Assuming simple copy is enough for list of lists if we don't hold refs
+                # Actually better to invoke manual copy if deepcopy needed, but integers/strings are fine
+                hotelData[j] = hotelData[j+1][:] 
+
+            # Clear last
+            hotelData[roomCount-1] = [-1, "HD", -11]
+            roomCount -= 1
+            save_data()
+            print("Deleted.")
+
+def ManageStaff():
+    header("STAFF MANAGEMENT")
+    print(f"[1] Add Staff  [2] View Staff  [0] Back")
+    opt = input("Option: ")
+    if opt == '1': addNewStaff()
+    elif opt == '2': viewallUser()
+
+def addNewStaff():
+    global userCount
+    username = input("Enter New Username: ")
+    # Check exist
+    for i in range(userCount):
+        if userData[i][1] == username:
+            print("User exists.")
+            return
+
+    password = input("Enter Password: ")
+    print("Roles: Admin, Receptionist, Manager, Worker")
+    role = input("Enter Role: ")
+    
+    userData[userCount][0] = userCount
+    userData[userCount][1] = username
+    userData[userCount][2] = password
+    userData[userCount][3] = role
+    userCount += 1
+    save_data()
+    print("User Added.")
+
+def viewallUser():
+    header("ALL USERS")
+    print(f"{'ID':<5} {'Username':<15} {'Role':<15}")
+    element("-")
+    for i in range(userCount):
+        print(f"{userData[i][0]:<5} {userData[i][1]:<15} {userData[i][3]:<15}")
+    element("-")
+    input("Press Enter...")
+
+def workerDuties():
+    header("WORKER DUTIES")
+    print(f"[1] Assign Task  [2] View Tasks  [3] Complete Task  [0] Back")
+    opt = input("Option: ")
+    if opt == '1': assignNewTask()
+    elif opt == '2': viewAllTask()
+    elif opt == '3': completeTask()
+
+def assignNewTask():
+    global taskCount
+    staff = input("Enter Staff Name: ")
+    desc = input("Task Description: ")
+    
+    assignTask[taskCount][0] = taskCount + 1
+    assignTask[taskCount][1] = staff
+    assignTask[taskCount][2] = desc
+    assignTask[taskCount][3] = "Pending"
+    taskCount += 1
+    save_data()
+    print("Task Assigned.")
+
+def viewAllTask():
+    header("TASKS")
+    for i in range(taskCount):
+        print(f"ID:{assignTask[i][0]} | Staff:{assignTask[i][1]} | {assignTask[i][2]} | [{assignTask[i][3]}]")
+    input("Press Enter...")
+
+def completeTask():
+    tid = int(input("Enter Task ID to complete: "))
+    for i in range(taskCount):
+        if assignTask[i][0] == tid:
+            assignTask[i][3] = "Completed"
+            save_data()
+            print("Updated.")
+            return
+    print("Not found.")
+
+def viewBooking():
+    header("BOOKINGS")
+    print(f"{'ID':<5} {'Name':<20} {'Room':<5} {'Status':<10} {'CheckIn'}")
+    for i in range(guest_count):
+        print(f"{guest_data[i][0]:<5} {guest_data[i][1]:<20} {guest_data[i][2]:<5} {guest_data[i][4]:<10} {guest_data[i][5]}")
+    
+    if input("[1] New Booking / [0] Back: ") == '1':
+        addNewBooking()
+
+def addNewBooking():
+    global guest_count
+    name = input("Guest Name: ")
+    phone = input("Phone: ")
+    now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    
+    # Show available
+    occupied = [guest_data[k][2] for k in range(guest_count) if guest_data[k][4] == "Active"]
+    print("Available Rooms:")
+    for i in range(roomCount):
+        if hotelData[i][0] not in occupied:
+            print(f"Room {hotelData[i][0]} ({hotelData[i][1]}) - {hotelData[i][2]}")
+            
+    try:
+        rno = int(input("Enter Room No: "))
+    except ValueError:
+        return
+
+    # Validate
+    valid = False
+    for i in range(roomCount):
+        if hotelData[i][0] == rno:
+            valid = True
+            break
+    if not valid or rno in occupied:
+        print("Invalid or Occupied.")
+        return
+
+    guest_data[guest_count][0] = guest_count + 1
+    guest_data[guest_count][1] = name
+    guest_data[guest_count][2] = rno
+    guest_data[guest_count][3] = phone
+    guest_data[guest_count][4] = "Active"
+    guest_data[guest_count][5] = now
+    guest_data[guest_count][6] = "-"
+    guest_data[guest_count][7] = 0
     guest_count += 1
-    
-    print("\n[SUCCESS] Booking Confirmed!")
-    print(f"Guest {guestName} assigned to Room {selected_room}")
-    
-    input("\nPress Enter to return...")
-    viewBooking()
+    save_data()
+    print("Booked.")
 
 
+def viewBillingReport():
+    print("="*55)
+    print(f"{'Financials':^55}")
+    print("="*55)
+    # print(f"{'Guest Name':<30} | {'Bill (PKR)':>15}")
+    # print("="*55)
+    total = 0
+    for i in range(guest_count):
+        if guest_data[i][4] == "CheckedOut":
+            print(f"Guest: {guest_data[i][1]} | Bill: {guest_data[i][7]}")
+            total += int(guest_data[i][7])
+    print("="*55)
+    print(f"Total Revenue: {total}")
+    print("="*55)
+    input("Press Enter...")
+
+
+def viewAttendanceReport():
+    header("Attendance Log")
+    for i in range(attendance_count):
+        print(f"{attendanceData[i][1]} | {attendanceData[i][2]} | {attendanceData[i][3]} | In: {attendanceData[i][4]} | Out: {attendanceData[i][5]}")
+    input("Press Enter...")
+
+def viewSystemStats():
+    print(f"Total Rooms: {roomCount}")
+    print(f"Total Staff: {userCount}")
+    print(f"Total Bookings: {guest_count}")
+    input("Press Enter...")
+
+# --- RECEPTIONIST FUNCTIONS ---
+
+def receptionist():
+    header("RECEPTIONIST PORTAL")
+    while True:
+        username = input("Username: ")
+        password = input("Password: ")
+        # Validate
+        valid = False
+        for i in range(userCount):
+            if userData[i][1] == username and userData[i][2] == password and (userData[i][3] == "Receptionist" or userData[i][3] == "Admin"):
+                valid = True
+                break
+        if valid:
+            receptionist_dashboard()
+            return
+        else:
+            print("Invalid.")
+            if input("Try again? (y/n): ") != 'y': return
+
+def receptionist_dashboard():
+    while True:
+        header("RECEPTIONIST DASHBOARD")
+        print("[1] Available Rooms")
+        print("[2] Register Entry (Book)")
+        print("[3] Guest Checkout & Bill")
+        print("[4] View Bookings")
+        print("[0] Logout")
+        
+        opt = input("Option: ")
+        if opt == '1': viewAvailableRooms()
+        elif opt == '2': addNewBooking()
+        elif opt == '3': checkOut()
+        elif opt == '4': viewBooking()
+        elif opt == '0': return
+
+def viewAvailableRooms():
+    header("AVAILABLE ROOMS")
+    occupied = [guest_data[k][2] for k in range(guest_count) if guest_data[k][4] == "Active"]
+    for i in range(roomCount):
+        if hotelData[i][0] not in occupied:
+            print(f"Room {hotelData[i][0]} | {hotelData[i][1]} | {hotelData[i][2]}")
+    input("Press Enter...")
+
+def checkOut():
+    header("CHECKOUT")
+    rno = int(input("Enter Room Number to Checkout: "))
+    found = -1
+    for i in range(guest_count):
+        if guest_data[i][2] == rno and guest_data[i][4] == "Active":
+            found = i
+            break
+            
+    if found != -1:
+        # Calculate Bill
+        print(f"Checking out Guest: {guest_data[found][1]}")
+        days = int(input("Enter Total Days Stayed: "))
+        
+        # Find room price
+        price = 0
+        for r in range(roomCount):
+            if hotelData[r][0] == rno:
+                price = hotelData[r][2]
+                break
+        
+        bill = days * price
+        print(f"Total Bill: {bill} PKR")
+        confirm = input("Confirm Checkout (y/n)? ")
+        if confirm.lower() == 'y':
+            guest_data[found][4] = "CheckedOut"
+            guest_data[found][6] = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+            guest_data[found][7] = bill
+            save_data()
+            print("Checked Out Successfully.")
+    else:
+        print("No active booking found for this room.")
+
+# --- MANAGER FUNCTIONS ---
+
+def manager():
+    header("MANAGER PORTAL")
+    # Simplify login for brevity - in real app, duplicate the logic or make a shared login func
+    username = input("Username: ")
+    password = input("Password: ")
+    # Validate
+    valid = False
+    for i in range(userCount):
+        if userData[i][1] == username and userData[i][2] == password and (userData[i][3] == "Manager" or userData[i][3] == "Admin"):
+            valid = True
+            break
+    if valid:
+        manager_dashboard()
+    else:
+        print("Invalid.")
+
+def manager_dashboard():
+    while True:
+        header("MANAGER DASHBOARD")
+        print("[1] View Rooms")
+        print("[2] View Bookings")
+        print("[3] Billing Reports")
+        print("[4] Staff Attendance")
+        print("[0] Logout")
+        
+        opt = input("Option: ")
+        if opt == '1': viewAllRooms() # Reuse
+        elif opt == '2': viewBooking() # Reuse
+        elif opt == '3': viewBillingReport() # Reuse
+        elif opt == '4': viewAttendanceReport() # Reuse
+        elif opt == '0': return
+
+# --- WORKER FUNCTIONS ---
+
+def worker():
+    header("WORKER PORTAL")
+    username = input("Username: ")
+    password = input("Password: ")
+    # Validate
+    valid = False
+    for i in range(userCount):
+        if userData[i][1] == username and userData[i][2] == password and (userData[i][3] == "Worker" or userData[i][3] == "Admin"):
+            valid = True
+            break
+    if valid:
+        worker_dashboard(username)
+    else:
+        print("Invalid.")
+
+def worker_dashboard(name):
+    while True:
+        header(f"WORKER: {name}")
+        print("[1] Check-In (Attendance)")
+        print("[2] Check-Out (Attendance)")
+        print("[3] View My Tasks")
+        print("[0] Logout")
+        
+        opt = input("Option: ")
+        if opt == '1': mark_attendance(name, "In")
+        elif opt == '2': mark_attendance(name, "Out")
+        elif opt == '3': viewMyTasks(name)
+        elif opt == '0': return
+
+def mark_attendance(name, type):
+    global attendance_count
+    now = datetime.datetime.now().strftime("%H:%M")
+    date = datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    if type == "In":
+        attendanceData[attendance_count][0] = attendance_count + 1
+        attendanceData[attendance_count][1] = name
+        attendanceData[attendance_count][2] = date
+        attendanceData[attendance_count][3] = "Present"
+        attendanceData[attendance_count][4] = now
+        attendanceData[attendance_count][5] = "-"
+        attendance_count += 1
+        save_data()
+        print("Checked In.")
+    else:
+        # Find last checkin today
+        for i in range(attendance_count-1, -1, -1):
+            if attendanceData[i][1] == name and attendanceData[i][2] == date and attendanceData[i][5] == "-":
+                attendanceData[i][5] = now
+                save_data()
+                print("Checked Out.")
+                return
+        print("You haven't checked in yet today.")
+
+def viewMyTasks(name):
+    header("MY TASKS")
+    for i in range(taskCount):
+        if assignTask[i][1] == name:
+            print(f"{assignTask[i][2]} - [{assignTask[i][3]}]")
+    input("Press Enter...")
+
+
+# --- MAIN ---
 
 def main():
-    while(True):
+    load_data()
+    while True:
         header("Hostel Management System")
         print("\nWelcome! Please select your role to access the system\n")
         print("-" * 55)
@@ -641,19 +699,22 @@ def main():
         print(f"[3] MANAGER{space:<16} [4] WORKER / STAFF")
         print(f"[5] Exit")
         print("-"*55)
-        option = int(input("Enter the Option (1-to-5): "))
-        if option == 1:
-            administratorlogin()
-        elif option == 2:
-            receptionist()
-        elif option == 3:
-            manager()
-        elif option == 4:
-            worker()
-        elif option == 5:
-            print("[System Shutting Down... Goodbye!]")
-            return
-        else:
-            print("Invalid Option")
-
+        
+        try:
+            option_str = input("Enter the Option (1-to-5): ")
+            if not option_str.isdigit(): continue
+            option = int(option_str)
+            
+            if option == 1: administratorlogin()
+            elif option == 2: receptionist()
+            elif option == 3: manager()
+            elif option == 4: worker()
+            elif option == 5:
+                save_data()
+                print("Goodbye!")
+                return
+            else:
+                print("Invalid Option")
+        except Exception as e:
+            print(f"Error: {e}")
 main()
