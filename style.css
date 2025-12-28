@@ -50,6 +50,16 @@ body {
     background: url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070&auto=format&fit=crop') no-repeat center center/cover;
     position: relative;
 }
+.auth-subtitle {
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase; /* MATCH SCREENSHOT */
+    margin-bottom: 3rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 1rem;
+}
 /* ... (auth styles continue normally) ... */
 
 /* --- DASHBOARD LAYOUT --- */
@@ -189,8 +199,8 @@ body {
 .form-label { display: block; margin-bottom: 0.8rem; color: var(--text-muted); font-size: 0.85rem; letter-spacing: 0.5px; }
 .form-input, .form-select {
     width: 100%; padding: 1rem;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.5); /* Darker background like screenshot */
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 6px;
     color: white;
     font-family: 'Outfit';

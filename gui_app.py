@@ -37,13 +37,14 @@ class HotelGUI:
         for widget in self.root.winfo_children():
             widget.destroy()
 
+
     # --- AUTH / ROLE SELECTION ---
     def create_auth_screen(self):
         self.clear_screen()
         
         # Central Card
-        card = ctk.CTkFrame(self.root, fg_color=COLOR_SURFACE, corner_radius=20, border_width=1, border_color="#333")
-        card.place(relx=0.5, rely=0.5, anchor="center", width=500, height=450)
+        card = ctk.CTkFrame(self.root, fg_color=COLOR_SURFACE, corner_radius=20, border_width=1, border_color="#333", width=500, height=450)
+        card.place(relx=0.5, rely=0.5, anchor="center")
         
         # Logo Area
         # We can't easily do ionicons in tkinter without images, so we use text
@@ -78,12 +79,13 @@ class HotelGUI:
         # Exit
         ctk.CTkButton(card, text="Exit Application", fg_color="transparent", text_color="#ef4444", hover_color="#330000", command=self.root.quit).pack(pady=20)
 
+
     def login_form(self, role):
         self.clear_screen()
         
         # Central Card
-        card = ctk.CTkFrame(self.root, fg_color=COLOR_SURFACE, corner_radius=20, border_width=1, border_color=COLOR_GOLD)
-        card.place(relx=0.5, rely=0.5, anchor="center", width=400, height=500)
+        card = ctk.CTkFrame(self.root, fg_color=COLOR_SURFACE, corner_radius=20, border_width=1, border_color=COLOR_GOLD, width=400, height=500)
+        card.place(relx=0.5, rely=0.5, anchor="center")
         
         # Header
         ctk.CTkLabel(card, text="♦ Luxe Stay", font=("Times New Roman", 24), text_color=COLOR_GOLD).pack(pady=(40, 5))
