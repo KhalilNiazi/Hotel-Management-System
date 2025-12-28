@@ -86,6 +86,22 @@ function setupDashboard(role) {
   // Switch Screen
   document.getElementById("auth-screen").classList.remove("active");
   document.getElementById("main-dashboard").classList.add("active");
+  if (type === "assign_task") {
+    modalTitle.innerText = "Assign New Task";
+    modalBody.innerHTML = `
+            <form onsubmit="submitForm(event, 'assign_task')">
+                <div class="form-group">
+                    <label class="form-label">Staff Username</label>
+                    <input type="text" name="staff" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input type="text" name="desc" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%">Assign</button>
+            </form>
+        `;
+  }
 
   // Sidebar Config
   document
@@ -203,6 +219,12 @@ async function loadView(viewType) {
     return;
   }
 
+  if (viewType === "tasks") {
+    document.getElementById(
+      "content-title"
+    ).innerHTML = `TASK MANAGEMENT <button class="btn btn-primary" onclick="openModal('assign_task')" style="float:right; font-size:0.9rem">+ Assign Task</button>`;
+  }
+
   if (viewType === "settings") {
     document.getElementById("page-heading").innerText = "System Settings";
     // Fetch current settings
@@ -298,10 +320,15 @@ async function loadView(viewType) {
       // Add Action Buttons logic
       if (["Admin", "Manager", "Receptionist"].includes(currentRole)) {
         let actions = "";
-        if (viewType === "rooms" && currentRole !== "Receptionist")
+        if (viewType === "rooms" && currentRole !== "Receptionist") {
           actions += `<button class="action-btn edit-btn" onclick="openEdit('room', ${row.id}, '${row.price}')">Edit Price</button> `;
-        if (viewType === "staff" && currentRole === "Admin")
+          if (currentRole === "Admin")
+            actions += `<button class="action-btn" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="deleteItem('room', ${row.id})">Del</button> `;
+        }
+        if (viewType === "staff" && currentRole === "Admin") {
           actions += `<button class="action-btn edit-btn" onclick="openEdit('staff', ${row.id}, '${row.salary}')">Edit Salary</button> `;
+          actions += `<button class="action-btn" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="deleteItem('staff', ${row.id})">Del</button> `;
+        }
         if (viewType === "bookings" && row.status === "Active") {
           actions += `<button class="action-btn edit-btn" onclick="openEdit('guest', ${row.id}, '${row.name}')">Edit</button> `;
           actions += `<button class="action-btn" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="checkoutGuest(${row.id})">Chk Out</button>`;
@@ -398,18 +425,22 @@ async function submitEdit(e) {
   const id = document.getElementById("edit-id").value;
   const val = document.getElementById("edit-val").value;
 
-  let api =
-    type === "room"
-      ? "edit_room"
-      : type === "staff"
-      ? "edit_staff"
+  let apiEndpoint =
+    type === "add_room"
+      ? "add_room"
+      : type === "newbooking"
+      ? "book"
+      : type === "assign_task"
+      ? "assign_task"
+      : type === "add_staff"
+      ? "add_staff"
       : "edit_guest";
   let body = { id: id };
   if (type === "room") body.price = val;
   else if (type === "staff") body.salary = val;
   else body.name = val;
 
-  const res = await fetch(`${API_BASE}/api/${api}`, {
+  const res = await fetch(`${API_BASE}/api/${apiEndpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -421,6 +452,30 @@ async function submitEdit(e) {
     if (type === "room") loadView("rooms");
     if (type === "staff") loadView("staff");
     if (type === "guest") loadView("bookings");
+    if (type === "add_room") loadView("rooms");
+    if (type === "add_staff") loadView("staff");
+    if (type === "newbooking") loadView("bookings");
+    if (type === "assign_task") loadView("tasks");
+  }
+}
+
+async function deleteItem(type, id) {
+  if (!confirm("Start Delete Sequence? This cannot be undone.")) return;
+
+  let endpoint = type === "room" ? "delete_room" : "delete_staff";
+  try {
+    const res = await fetch(`${API_BASE}/api/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id }),
+    });
+    const data = await res.json();
+    alert(data.message);
+    if (data.status === "success") {
+      loadView(type === "room" ? "rooms" : "staff");
+    }
+  } catch (e) {
+    alert("Error deleting");
   }
 }
 

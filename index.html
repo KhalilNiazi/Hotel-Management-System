@@ -9,87 +9,53 @@
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
 <body>
-
- <!-- BLUR BACKGROUND -->
-<div class="auth-bg"></div>
-
-<!-- LOGIN / PORTAL SCREEN -->
-<div id="auth-screen" class="auth-wrapper screen active">
-    <div class="auth-card">
-        <div class="auth-header">
-            <div class="auth-logo">
-                <ion-icon name="diamond-outline"></ion-icon>
-                <span id="app-brand-auth">Luxe Stay</span>
+    <!-- LOGIN / PORTAL SCREEN -->
+    <div id="auth-screen" class="auth-wrapper screen active">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <ion-icon name="diamond-outline" style="vertical-align:bottom; margin-right:10px;"></ion-icon>
+                    <span id="app-brand-auth">Luxe Stay</span>
+                </div>
+                <div class="auth-subtitle">Executive Management Suite</div>
             </div>
-            <div class="auth-subtitle">Executive Management Suite</div>
+
+            <!-- Role Selection -->
+            <div id="role-view">
+                <div class="role-grid">
+                    <button class="btn btn-outline" onclick="showLoginInfo('Admin')">
+                        <ion-icon name="key-outline" style="font-size:1.4em; margin-bottom:5px; display:block"></ion-icon> Admin
+                    </button>
+                    <button class="btn btn-outline" onclick="showLoginInfo('Receptionist')">
+                        <ion-icon name="desktop-outline" style="font-size:1.4em; margin-bottom:5px; display:block"></ion-icon> Reception
+                    </button>
+                    <button class="btn btn-outline" onclick="showLoginInfo('Manager')">
+                        <ion-icon name="briefcase-outline" style="font-size:1.4em; margin-bottom:5px; display:block"></ion-icon> Manager
+                    </button>
+                    <button class="btn btn-outline" onclick="showLoginInfo('Worker')">
+                        <ion-icon name="construct-outline" style="font-size:1.4em; margin-bottom:5px; display:block"></ion-icon> Staff
+                    </button>
+                </div>
+            </div>
+
+            <!-- Login Inputs -->
+            <form id="login-form" style="display:none; text-align:left;">
+                <input type="hidden" id="selected-role">
+                <div class="form-group">
+                    <label class="form-label">IDENTITY</label>
+                    <input type="text" id="username" class="form-input" required placeholder="Username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">CREDENTIAL</label>
+                    <input type="password" id="password" class="form-input" required placeholder="••••••••">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%">Authenticate</button>
+                <button type="button" class="btn btn-outline" style="width:100%; margin-top:15px; border:none;" onclick="backToRoles()">← RETURN</button>
+            </form>
+            <p id="login-msg" style="margin-top:20px; color:#f87171;"></p>
         </div>
-
-        <!-- Role Selection -->
-        <div id="role-view">
-            <div class="role-grid">
-                <button class="btn btn-outline" onclick="showLoginInfo('Admin')">
-                    <ion-icon name="key-outline"></ion-icon>
-                    <span>Admin</span>
-                </button>
-
-                <button class="btn btn-outline" onclick="showLoginInfo('Receptionist')">
-                    <ion-icon name="desktop-outline"></ion-icon>
-                    <span>Reception</span>
-                </button>
-
-                <button class="btn btn-outline" onclick="showLoginInfo('Manager')">
-                    <ion-icon name="briefcase-outline"></ion-icon>
-                    <span>Manager</span>
-                </button>
-
-                <button class="btn btn-outline" onclick="showLoginInfo('Worker')">
-                    <ion-icon name="construct-outline"></ion-icon>
-                    <span>Staff</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Login Inputs -->
-        <form id="login-form" style="display:none;">
-            <input type="hidden" id="selected-role">
-
-            <div class="form-group">
-                <label class="form-label">IDENTITY</label>
-                <input
-                    type="text"
-                    id="username"
-                    class="form-input"
-                    required
-                    placeholder="Username">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">CREDENTIAL</label>
-                <input
-                    type="password"
-                    id="password"
-                    class="form-input"
-                    required
-                    placeholder="••••••••">
-            </div>
-
-            <button type="submit" class="btn btn-primary" style="width:100%">
-                Authenticate
-            </button>
-
-            <button
-                type="button"
-                class="btn btn-outline"
-                style="width:100%; margin-top:14px; border:none;"
-                onclick="backToRoles()">
-                ← Return
-            </button>
-        </form>
-
-        <p id="login-msg"></p>
     </div>
-</div>
-
 
 
     <!-- DASHBOARD SCREEN -->

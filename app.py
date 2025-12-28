@@ -232,7 +232,60 @@ def add_staff():
     backend.save_data()
     return jsonify({"status": "success", "message": "Staff Added"})
 
+
+@app.route('/api/delete_room', methods=['POST'])
+def delete_room():
+    data = request.json
+    try:
+        rid = int(data.get('id'))
+        
+        # Determine index
+        for i in range(backend.roomCount):
+             if backend.hotelData[i][0] == rid:
+                 # Shift logic (simple array replacement for persistent lists)
+                 # In python lists: pop or del. But backend uses fixed size arrays logic?
+                 # No, backend.hotelData is list of lists
+                 # In main.py:
+                 # for j in range(idx, roomCount - 1): hotelData[j] = hotelData[j+1]
+                 # hotelData[roomCount-1] = [-1, "HD", -11]
+                 
+                 for j in range(i, backend.roomCount - 1):
+                     backend.hotelData[j] = backend.hotelData[j+1][:]
+                 
+                 backend.hotelData[backend.roomCount - 1] = [-1, "HD", -11]
+                 backend.roomCount -= 1
+                 backend.save_data()
+                 return jsonify({"status": "success", "message": "Room Deleted"})
+        
+        return jsonify({"status": "error", "message": "Room Not Found"})
+    except Exception as e:
+        print(e)
+        return jsonify({"status": "error", "message": "Delete Failed"})
+
+@app.route('/api/delete_staff', methods=['POST'])
+def delete_staff():
+    data = request.json
+    try:
+        uid = int(data.get('id'))
+        
+        for i in range(backend.userCount):
+             if backend.userData[i][0] == uid:
+                 # Shift
+                 for j in range(i, backend.userCount - 1):
+                     backend.userData[j] = backend.userData[j+1][:]
+                 
+                 # Reset last
+                 backend.userData[backend.userCount - 1] = [-1, "U", "P", "R", "0"]
+                 backend.userCount -= 1
+                 backend.save_data()
+                 return jsonify({"status": "success", "message": "Staff Deleted"})
+                 
+        return jsonify({"status": "error", "message": "Staff Not Found"})
+    except:
+        return jsonify({"status": "error", "message": "Delete Failed"})
+
 @app.route('/api/assign_task', methods=['POST'])
+
 def assign_task():
     data = request.json
     try:
