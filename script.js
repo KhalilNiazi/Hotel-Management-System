@@ -21,40 +21,52 @@
 const API_BASE = window.location.port === "5500" ? "http://127.0.0.1:5000" : "";
 let currentUser = null;
 let currentRole = null;
-let allRoomData = []; // Store for filtering
+let currentDataSet = [];
+let allRoomData = [];
 
 // --- AUTH LOGIC ---
-function showLoginInfo(role) {
-  // Hide the Role Grid
-  document.getElementById("role-view").style.display = "none";
-  // Show the Login Form
-  document.getElementById("login-form").style.display = "block";
 
-  document.getElementById("selected-role").value = role;
+// --- AUTH LOGIC ---
+window.showLoginInfo = function (role) {
+  console.log("Selecting Role: " + role);
+  // Hide the Role Grid
+  const roleView = document.getElementById("role-view");
+  const loginForm = document.getElementById("login-form");
+
+  if (roleView) roleView.style.display = "none";
+  if (loginForm) {
+    loginForm.style.display = "block";
+    // Force visibility just in case
+    loginForm.style.opacity = "1";
+    loginForm.style.visibility = "visible";
+  }
+
+  const roleInput = document.getElementById("selected-role");
+  if (roleInput) roleInput.value = role;
 
   // Update Header text to show which portal we are accessing
   const subtitle = document.querySelector(".auth-subtitle");
   if (subtitle) subtitle.innerText = `${role} Portal Login`;
 
   // Clear previous messages and focus
-  document.getElementById("login-msg").innerText = "";
-  document.getElementById("username").focus();
-}
+  const msg = document.getElementById("login-msg");
+  if (msg) msg.innerText = "";
 
-function backToRoles() {
-  // Hide the Login Form
+  const user = document.getElementById("username");
+  if (user) user.focus();
+};
+
+window.backToRoles = function () {
   document.getElementById("login-form").style.display = "none";
-  // Show the Role Grid
   document.getElementById("role-view").style.display = "block";
 
-  // Reset Header and Inputs
   const subtitle = document.querySelector(".auth-subtitle");
   if (subtitle) subtitle.innerText = "Premium Hotel Management System";
 
   document.getElementById("login-msg").innerText = "";
   document.getElementById("username").value = "";
   document.getElementById("password").value = "";
-}
+};
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -86,22 +98,6 @@ function setupDashboard(role) {
   // Switch Screen
   document.getElementById("auth-screen").classList.remove("active");
   document.getElementById("main-dashboard").classList.add("active");
-  if (type === "assign_task") {
-    modalTitle.innerText = "Assign New Task";
-    modalBody.innerHTML = `
-            <form onsubmit="submitForm(event, 'assign_task')">
-                <div class="form-group">
-                    <label class="form-label">Staff Username</label>
-                    <input type="text" name="staff" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <input type="text" name="desc" class="form-input" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width:100%">Assign</button>
-            </form>
-        `;
-  }
 
   // Sidebar Config
   document
@@ -134,9 +130,26 @@ function logout() {
   location.reload(); // Simplest logout
 }
 
+function updateNavHighlight(targetView) {
+  document.querySelectorAll(".nav-item").forEach((el) => {
+    el.classList.remove("active");
+    // Check if this nav item calls the target view
+    const clickAttr = el.getAttribute("onclick");
+    if (clickAttr) {
+      if (
+        clickAttr.includes(`'${targetView}'`) ||
+        (targetView === "stats" && clickAttr.includes("loadStats"))
+      ) {
+        el.classList.add("active");
+      }
+    }
+  });
+}
+
 // --- CORE VIEW LOGIC ---
 
 async function loadView(viewType) {
+  updateNavHighlight(viewType); // Highlight menu
   const area = document.getElementById("view-area");
   const searchCont = document.getElementById("search-container");
   const workerArea = document.getElementById("worker-area");
@@ -261,100 +274,120 @@ async function loadView(viewType) {
   searchCont.style.display = "block"; // Enable search for tables
 
   // Fetch Data
-  let endpoint = `/api/${viewType}`;
-  if (viewType === "finance") endpoint = "/api/bookings";
+  let endpoint = viewType;
 
-  const res = await fetch(`${API_BASE}${endpoint}`);
-  const data = await res.json();
+  const apiMap = {
+    rooms: "rooms",
+    staff: "staff",
+    bookings: "bookings",
+    tasks: "tasks",
+    finance: "stats",
+  };
 
-  // Special Render for Finance
-  if (viewType === "finance") {
-    let total = 0;
-    let html = `<table class="data-table" id="data-table"><thead><tr><th>Guest</th><th>Status</th><th>Bill (Rs.)</th></tr></thead><tbody>`;
-    data.forEach((r) => {
-      if (r.status === "CheckedOut") {
-        html += `<tr><td>${r.name}</td><td><span class="status-badge status-checkedout">Paid</span></td><td>Rs. ${r.bill}</td></tr>`;
-        total += r.bill;
-      }
-    });
-    html += `</tbody></table><div style="padding:20px; text-align:right"><h2>Total Revenue: Rs. ${total.toLocaleString()}</h2></div>`;
-    area.innerHTML = html;
-    return;
-  }
+  if (apiMap[viewType]) endpoint = apiMap[viewType];
 
-  // Generic Table Render
-  if (data.length > 0) {
-    let keys = Object.keys(data[0]);
-    let html = `<table class="data-table" id="data-table"><thead><tr>`;
-    keys.forEach((k) => (html += `<th>${k.toUpperCase()}</th>`));
-    // Add Action Column for Admin/Manager
+  try {
+    const res = await fetch(`${API_BASE}/api/${endpoint}`);
 
-    // Add Action Column for Admin/Manager
-    if (
-      ["Admin", "Manager", "Receptionist"].includes(currentRole) &&
-      (viewType === "rooms" || viewType === "staff" || viewType === "bookings")
-    ) {
-      html += `<th>ACTION</th>`;
-    }
-    html += `</tr></thead><tbody>`;
+    const data = await res.json();
 
-    data.forEach((row) => {
-      html += `<tr>`;
-      Object.values(row).forEach((v) => {
-        let display = v;
-        // Badge logic
-        if (typeof v === "string") {
-          if (v.toLowerCase() === "active")
-            display = `<span class="status-badge status-active">Active</span>`;
-          if (v.toLowerCase() === "occupied")
-            display = `<span class="status-badge status-occupied">Occupied</span>`;
-          if (v.toLowerCase() === "available")
-            display = `<span class="status-badge status-available">Available`;
-          if (v.toLowerCase() === "present")
-            display = `<span class="status-badge status-present">Present</span>`;
+    // Special Render for Finance
+    if (viewType === "finance") {
+      let total = 0;
+      let html = `<table class="data-table" id="data-table"><thead><tr><th>Guest</th><th>Status</th><th>Bill (Rs.)</th></tr></thead><tbody>`;
+      data.forEach((r) => {
+        if (r.status === "CheckedOut") {
+          html += `<tr><td>${r.name}</td><td><span class="status-badge status-checkedout">Paid</span></td><td>Rs. ${r.bill}</td></tr>`;
+          total += r.bill;
         }
-        html += `<td>${display}</td>`;
       });
-      // Add Action Buttons logic
-
-      // Add Action Buttons logic
-      if (["Admin", "Manager", "Receptionist"].includes(currentRole)) {
-        let actions = "";
-        if (viewType === "rooms" && currentRole !== "Receptionist") {
-          actions += `<button class="action-btn edit-btn" onclick="openEdit('room', ${row.id}, '${row.price}')">Edit Price</button> `;
-          if (currentRole === "Admin")
-            actions += `<button class="action-btn" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="deleteItem('room', ${row.id})">Del</button> `;
-        }
-        if (viewType === "staff" && currentRole === "Admin") {
-          actions += `<button class="action-btn edit-btn" onclick="openEdit('staff', ${row.id}, '${row.salary}')">Edit Salary</button> `;
-          actions += `<button class="action-btn" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="deleteItem('staff', ${row.id})">Del</button> `;
-        }
-        if (viewType === "bookings" && row.status === "Active") {
-          actions += `<button class="action-btn edit-btn" onclick="openEdit('guest', ${row.id}, '${row.name}')">Edit</button> `;
-          actions += `<button class="action-btn" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="checkoutGuest(${row.id})">Chk Out</button>`;
-        }
-
-        if (actions !== "") html += `<td>${actions}</td>`;
-        else if (
-          document.querySelector("#data-table th:last-child").innerText ===
-          "ACTION"
-        )
-          html += `<td>-</td>`;
-      }
-      html += `</tr>`;
-    });
-    html += `</tbody></table>`;
-
-    // --- PRINT BUTTON FOR ATTENDANCE ---
-    if (viewType === "attendance" || viewType === "attendance_report") {
-      area.innerHTML =
-        `<div style="text-align:right; margin-bottom:10px;"><button class="btn btn-outline" onclick="window.print()">🖨 Print Report</button></div>` +
-        html;
-    } else {
+      html += `</tbody></table><div style="padding:20px; text-align:right"><h2>Total Revenue: Rs. ${total.toLocaleString()}</h2></div>`;
       area.innerHTML = html;
+      return;
     }
-  } else {
-    area.innerHTML = '<div style="padding:20px">No records found.</div>';
+
+    // Generic Table Render
+    if (data.length > 0) {
+      currentDataSet = data; // Store for edits
+      let keys = Object.keys(data[0]);
+
+      // Determine if Actions should be shown
+      const showActions =
+        ["Admin", "Manager", "Receptionist"].includes(currentRole) &&
+        (viewType === "rooms" ||
+          viewType === "staff" ||
+          viewType === "bookings");
+
+      let html = `<table class="data-table" id="data-table"><thead><tr>`;
+      keys.forEach(
+        (k) => (html += `<th>${k.toUpperCase().replace("_", " ")}</th>`)
+      );
+
+      if (showActions) html += `<th>ACTION</th>`;
+
+      html += `</tr></thead><tbody>`;
+
+      data.forEach((row) => {
+        html += `<tr>`;
+        Object.values(row).forEach((v) => {
+          let display = v;
+          if (typeof v === "string") {
+            const lower = v.toLowerCase();
+            if (lower === "active")
+              display = `<span class="status-badge status-active">Active</span>`;
+            else if (lower === "occupied")
+              display = `<span class="status-badge status-occupied">Occupied</span>`;
+            else if (lower === "available")
+              display = `<span class="status-badge status-available">Available</span>`;
+            else if (lower === "checkedout")
+              display = `<span class="status-badge status-checkedout">Checked Out</span>`;
+          }
+          html += `<td>${display}</td>`;
+        });
+
+        if (showActions) {
+          let actions = "";
+          // Room Actions
+          if (viewType === "rooms" && currentRole !== "Receptionist") {
+            actions += `<button class="action-btn edit-btn" onclick="openEdit('room', ${row.id})">Edit</button> `;
+            if (currentRole === "Admin")
+              actions += `<button class="action-btn" style="background:#ef4444;" onclick="deleteItem('room', ${row.id})">Del</button>`;
+          }
+          // Staff Actions
+          else if (viewType === "staff" && currentRole === "Admin") {
+            actions += `<button class="action-btn edit-btn" onclick="openEdit('staff', ${row.id})">Edit</button> `;
+            actions += `<button class="action-btn" style="background:#ef4444;" onclick="deleteItem('staff', ${row.id})">Del</button>`;
+          }
+
+          // Booking Actions
+          else if (viewType === "bookings") {
+            actions += `<button class="action-btn edit-btn" onclick="openEdit('guest', ${row.id})">Edit</button> `;
+            if (row.status === "Active")
+              actions += `<button class="action-btn chkout-btn" onclick="checkoutGuest(${row.id})">Chk Out</button>`;
+          }
+
+          html += `<td>${actions || "-"}</td>`;
+        }
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+
+      // --- PRINT BUTTON FOR ATTENDANCE ---
+      if (viewType === "attendance" || viewType === "attendance_report") {
+        area.innerHTML =
+          `<div style="text-align:right; margin-bottom:10px;"><button class="btn btn-outline" onclick="window.print()">🖨 Print Report</button></div>` +
+          html;
+      } else {
+        area.innerHTML = html;
+      }
+    } else {
+      area.innerHTML = '<div style="padding:20px">No records found.</div>';
+    }
+  } catch (e) {
+    console.log(e);
+    const va = document.getElementById("view-area");
+    if (va)
+      va.innerHTML = `<div style="padding:20px; color:red">Failed to load data.<br>${e.message}</div>`;
   }
 }
 
@@ -396,23 +429,102 @@ function selectRoom(id) {
   event.currentTarget.style.background = "#4f46e533";
 }
 
-// --- EDIT MODAL LOGIC ---
-function openEdit(type, id, currentVal) {
-  document.getElementById("edit-modal").style.display = "flex";
-  document.getElementById("edit-id").value = id;
-  document.getElementById("edit-type").value = type;
-  document.getElementById("edit-val").value = currentVal;
+function openAdd(type) {
+  const modal = document.getElementById("edit-modal");
+  modal.style.display = "flex";
+  document.getElementById("modal-title").innerText = "Create New Record";
 
-  if (type === "room")
+  const body = document.getElementById("edit-form-body");
+  let html = `<input type="hidden" name="type" value="${type}">`;
+
+  if (type === "add_room") {
+    html += `
+          <div class="form-group"><label class="form-label">Room Number</label><input class="form-input" name="room" required type="number"></div>
+          <div class="form-group"><label class="form-label">Type</label><select class="form-input" name="type"><option>Single</option><option>Double</option><option>Suite</option></select></div>
+          <div class="form-group"><label class="form-label">Price (Rs.)</label><input class="form-input" name="price" required type="number"></div>
+        `;
+  } else if (type === "add_staff") {
+    html += `
+          <div class="form-group"><label class="form-label">Username</label><input class="form-input" name="username" required></div>
+          <div class="form-group"><label class="form-label">Password</label><input class="form-input" name="password" required></div>
+          <div class="form-group"><label class="form-label">Role</label>
+            <select class="form-input" name="role"><option>Worker</option><option>Receptionist</option><option>Manager</option><option>Admin</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Salary</label><input class="form-input" name="salary" required type="number" value="0"></div>
+        `;
+  } else if (type === "book") {
+    html += `
+          <div class="form-group"><label class="form-label">Guest Name</label><input class="form-input" name="name" required></div>
+          <div class="form-group"><label class="form-label">Phone</label><input class="form-input" name="phone" required></div>
+          <div class="form-group"><label class="form-label">Room ID</label><input class="form-input" name="room" required type="number" placeholder="Enter Room ID"></div>
+        `;
+  }
+
+  body.innerHTML = html;
+}
+
+// --- EDIT MODAL LOGIC ---
+function openEdit(type, id) {
+  const modal = document.getElementById("edit-modal");
+  modal.style.display = "flex";
+
+  // Find Row Data
+  const row = currentDataSet.find((r) => r.id === id);
+  if (!row) {
+    alert("Error: Data not found in view");
+    return;
+  }
+
+  const body = document.getElementById("edit-form-body");
+  let html = `<input type="hidden" name="id" value="${id}"><input type="hidden" name="type" value="${type}">`;
+
+  if (type === "room") {
+    document.getElementById("modal-title").innerText = `Edit Room ${id}`;
+    html += `
+        <div class="form-group"><label class="form-label">Price (Rs.)</label><input class="form-input" name="price" value="${row.price}" required></div>
+      `;
+  } else if (type === "staff") {
     document.getElementById(
       "modal-title"
-    ).innerText = `Edit Price (Room ${id})`;
-  if (type === "staff")
-    document.getElementById("modal-title").innerText = `Edit Salary (ID ${id})`;
-  if (type === "guest")
+    ).innerText = `Edit Staff: ${row.username}`;
+    html += `
+        <div class="form-group"><label class="form-label">Username</label><input class="form-input" name="username" value="${
+          row.username
+        }" required></div>
+        <div class="form-group"><label class="form-label">Password</label><input class="form-input" name="password" placeholder="(Leave blank to keep)"></div>
+        <div class="form-group"><label class="form-label">Role</label>
+           <select class="form-input" name="role">
+             <option value="Admin" ${
+               row.role === "Admin" ? "selected" : ""
+             }>Admin</option>
+             <option value="Manager" ${
+               row.role === "Manager" ? "selected" : ""
+             }>Manager</option>
+             <option value="Receptionist" ${
+               row.role === "Receptionist" ? "selected" : ""
+             }>Receptionist</option>
+             <option value="Worker" ${
+               row.role === "Worker" ? "selected" : ""
+             }>Worker</option>
+           </select>
+        </div>
+        <div class="form-group"><label class="form-label">Salary</label><input class="form-input" name="salary" value="${
+          row.salary
+        }" required></div>
+      `;
+  } else if (type === "guest") {
     document.getElementById(
       "modal-title"
-    ).innerText = `Edit Guest Name (ID ${id})`;
+    ).innerText = `Edit Guest: ${row.name}`;
+    html += `
+        <div class="form-group"><label class="form-label">Name</label><input class="form-input" name="name" value="${row.name}" required></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" name="phone" value="${row.phone}" required></div>
+        <div class="form-group"><label class="form-label">Check In</label><input class="form-input" name="checkin" value="${row.checkin}"></div>
+        <div class="form-group"><label class="form-label">Check Out</label><input class="form-input" name="checkout" value="${row.checkout}"></div>
+      `;
+  }
+
+  body.innerHTML = html;
 }
 
 function closeModal() {
@@ -421,29 +533,27 @@ function closeModal() {
 
 async function submitEdit(e) {
   e.preventDefault();
-  const type = document.getElementById("edit-type").value;
-  const id = document.getElementById("edit-id").value;
-  const val = document.getElementById("edit-val").value;
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData.entries());
 
-  let apiEndpoint =
-    type === "add_room"
-      ? "add_room"
-      : type === "newbooking"
-      ? "book"
-      : type === "assign_task"
-      ? "assign_task"
-      : type === "add_staff"
-      ? "add_staff"
-      : "edit_guest";
-  let body = { id: id };
-  if (type === "room") body.price = val;
-  else if (type === "staff") body.salary = val;
-  else body.name = val;
+  // Endpoint map
 
-  const res = await fetch(`${API_BASE}/api/${apiEndpoint}`, {
+  // Endpoint map
+  const type = data.type;
+  let api = "";
+  if (type === "room") api = "edit_room";
+  if (type === "staff") api = "edit_staff";
+  if (type === "guest") api = "edit_guest";
+  if (type === "add_room") api = "add_room";
+  if (type === "add_staff") api = "add_staff";
+  if (type === "book") api = "book";
+
+  if (!api) return;
+
+  const res = await fetch(`${API_BASE}/api/${api}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(data),
   });
   const ret = await res.json();
   alert(ret.message);
@@ -452,10 +562,6 @@ async function submitEdit(e) {
     if (type === "room") loadView("rooms");
     if (type === "staff") loadView("staff");
     if (type === "guest") loadView("bookings");
-    if (type === "add_room") loadView("rooms");
-    if (type === "add_staff") loadView("staff");
-    if (type === "newbooking") loadView("bookings");
-    if (type === "assign_task") loadView("tasks");
   }
 }
 
@@ -522,6 +628,7 @@ function filterTable() {
 
 // --- STATS ---
 async function loadStats() {
+  updateNavHighlight("stats");
   document.getElementById("page-heading").innerText = "Dashboard";
   document.getElementById("view-area").style.display = "none";
   document.getElementById("stats-area").style.display = "grid"; // Show grid

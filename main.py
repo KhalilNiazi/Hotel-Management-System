@@ -61,98 +61,18 @@ import json
 import requests.exceptions
 
 # Config to switch betwen local and cloud
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8dz952nhMYHVDDKtcdyJlRivoiy3HEyePPW15X5VwcQirXRg9_JcF0X6B7tpXlNAHbg/exec" # User needs to paste their URL here
+
+# Config to switch betwen local and cloud
+APPS_SCRIPT_URL = "" 
 USE_CLOUD = False    # Set to True to enable
 
 def load_data():
     global roomCount, userCount, taskCount, guest_count, attendance_count
     load_settings()
     
-    if USE_CLOUD and APPS_SCRIPT_URL:
-        # --- CLOUD LOAD ---
-        try:
-            print("fetching data from cloud...")
-            response = requests.get(APPS_SCRIPT_URL + "?action=read")
-            data = response.json()
-            
-            # Rooms
-            if "Rooms" in data:
-                rows = data["Rooms"]
-                roomCount = 0
-                for r in rows:
-                    if roomCount < MAX_CAP:
-                         hotelData[roomCount][0] = int(r[0])
-                         hotelData[roomCount][1] = str(r[1])
-                         hotelData[roomCount][2] = int(r[2])
-                         roomCount += 1
+    # --- FILE LOAD (Existing Code) ---
+    # Load Rooms
 
-            # Users
-            if "Users" in data:
-                rows = data["Users"]
-                userCount = 0
-                for r in rows:
-                    if userCount < MAX_USER:
-                        userData[userCount][0] = int(r[0])
-                        userData[userCount][1] = str(r[1])
-                        userData[userCount][2] = str(r[2])
-                        userData[userCount][3] = str(r[3])
-                        while len(userData[userCount]) < 5: userData[userCount].append("0") 
-                        userData[userCount][4] = str(r[4]) if len(r)>4 else "0"
-                        userCount += 1
-
-            # Tasks
-            if "Tasks" in data:
-                rows = data["Tasks"]
-                taskCount = 0
-                for r in rows:
-                    if taskCount < MAX_TASK:
-                        assignTask[taskCount][0] = int(r[0])
-                        assignTask[taskCount][1] = str(r[1])
-                        assignTask[taskCount][2] = str(r[2])
-                        assignTask[taskCount][3] = str(r[3])
-                        taskCount += 1
-
-            # Guests
-            if "Guests" in data:
-                rows = data["Guests"]
-                guest_count = 0
-                for r in rows:
-                    if guest_count < MAX_GUEST:
-                        guest_data[guest_count][0] = int(r[0])
-                        guest_data[guest_count][1] = str(r[1])
-                        guest_data[guest_count][2] = int(r[2])
-                        guest_data[guest_count][3] = str(r[3])
-                        guest_data[guest_count][4] = str(r[4])
-                        guest_data[guest_count][5] = str(r[5])
-                        guest_data[guest_count][6] = str(r[6])
-                        if len(r) > 7: guest_data[guest_count][7] = int(r[7])
-                        else: guest_data[guest_count][7] = 0
-                        guest_count += 1
-            
-            # Attendance
-            if "Attendance" in data:
-                rows = data["Attendance"]
-                attendance_count = 0
-                for r in rows:
-                    if attendance_count < MAX_ATTENDANCE:
-                         attendanceData[attendance_count][0] = int(r[0])
-                         attendanceData[attendance_count][1] = str(r[1])
-                         attendanceData[attendance_count][2] = str(r[2])
-                         attendanceData[attendance_count][3] = str(r[3])
-                         attendanceData[attendance_count][4] = str(r[4])
-                         attendanceData[attendance_count][5] = str(r[5])
-                         attendance_count += 1
-
-            # Settings
-            if "Settings" in data and len(data["Settings"]) > 0:
-                 # Assume row 1 col 1 is name
-                 hotel_config["name"] = str(data["Settings"][0][0])
-
-            return # Skip file load if cloud successful
-        except Exception as e:
-            print(f"Cloud Error: {e}")
-            # Fallback to local
-    
     # --- FILE LOAD (Existing Code) ---
     # Load Rooms
 
@@ -238,21 +158,30 @@ def load_data():
                     idx += 1
             guest_count = idx
             
+
     # Load Attendance
-    if os.path.exists("data/attendance.txt"):
-        with open("data/attendance.txt", "r") as f:
+    # Use fallback if attendance.txt missing or empty
+    if not os.path.exists("data/attendance.txt"):
+        pass 
+    else:
+         with open("data/attendance.txt", "r") as f:
             lines = f.readlines()
             idx = 0
             for line in lines:
                 data = line.strip().split(',')
+                # Ensure data row has at least 6 columns
+                # ID, Name, Date, Status, TimeIn, TimeOut
                 if len(data) >= 6 and idx < MAX_ATTENDANCE:
-                    attendanceData[idx][0] = int(data[0])
-                    attendanceData[idx][1] = data[1]
-                    attendanceData[idx][2] = data[2]
-                    attendanceData[idx][3] = data[3]
-                    attendanceData[idx][4] = data[4]
-                    attendanceData[idx][5] = data[5]
-                    idx += 1
+                    try:
+                        attendanceData[idx][0] = int(data[0])
+                        attendanceData[idx][1] = str(data[1])
+                        attendanceData[idx][2] = str(data[2])
+                        attendanceData[idx][3] = str(data[3])
+                        attendanceData[idx][4] = str(data[4])
+                        attendanceData[idx][5] = str(data[5])
+                        idx += 1
+                    except Exception as e:
+                        print(f"Error parsing attendance line {idx}: {e}")
             attendance_count = idx
 
 

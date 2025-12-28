@@ -322,29 +322,40 @@ def edit_room():
     except:
         return jsonify({"status": "error", "message": "Invalid ID"})
 
+
 @app.route('/api/edit_staff', methods=['POST'])
 def edit_staff():
     data = request.json
     try:
         sid = int(data.get('id'))
+        # Updates
+        name = data.get('username')
+        pw = data.get('password')
+        role = data.get('role')
         salary = data.get('salary')
         
         found = False
         for i in range(backend.userCount):
             if backend.userData[i][0] == sid:
+                # Update provided fields if not None
+                if name: backend.userData[i][1] = name
+                if pw: backend.userData[i][2] = pw
+                if role: backend.userData[i][3] = role
+                
                 if len(backend.userData[i]) < 5: backend.userData[i].append("0")
-                backend.userData[i][4] = salary
+                if salary: backend.userData[i][4] = salary
+                
                 found = True
                 break
         
         if found:
             backend.save_data()
             return jsonify({"status": "success", "message": "Staff Updated"})
-    except:
+    except Exception as e:
+         print(e)
          return jsonify({"status": "error", "message": "Error"})
     
     return jsonify({"status": "error", "message": "Not Found"})
-
 
 @app.route('/api/edit_guest', methods=['POST'])
 def edit_guest():
@@ -352,11 +363,17 @@ def edit_guest():
     try:
         gid = int(data.get('id'))
         name = data.get('name')
+        phone = data.get('phone')
+        cin = data.get('checkin') 
+        cout = data.get('checkout') 
         
         found = False
         for i in range(backend.guest_count):
             if backend.guest_data[i][0] == gid:
-                backend.guest_data[i][1] = name
+                if name: backend.guest_data[i][1] = name
+                if phone: backend.guest_data[i][3] = phone
+                if cin: backend.guest_data[i][5] = cin
+                if cout: backend.guest_data[i][6] = cout
                 found = True
                 break
         

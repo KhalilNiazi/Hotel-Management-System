@@ -69,9 +69,12 @@
 
             <!-- Dynamic Menus (ID hooks for script.js) -->
             <nav class="nav-menu" id="admin-menu" style="display:none;">
+
                 <div class="nav-item active" onclick="loadStats()"><span>Dashboard</span></div>
                 <div class="nav-item" onclick="loadView('rooms')"><span>Suites</span></div>
                 <div class="nav-item" onclick="loadView('staff')"><span>Personnel</span></div>
+                <div class="nav-item" onclick="loadView('bookings')"><span>Guests</span></div>
+                <div class="nav-item" onclick="loadView('tasks')"><span>Tasks</span></div>
                 <div class="nav-item" onclick="loadView('finance')"><span>Revenue</span></div>
                 <div class="nav-item" onclick="loadView('attendance_report')"><span>Attendance</span></div>
                 <div class="nav-item" onclick="loadView('settings')"><span>Settings</span></div>
@@ -127,15 +130,14 @@
     </div>
 
 
+
     <!-- EDIT MODAL (Global) -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h2 id="modal-title" style="font-family:'Playfair Display'; color:var(--gold-primary); margin-bottom:20px;">Edit Record</h2>
-            <form onsubmit="submitEdit(event)">
-                <input type="hidden" id="edit-id"><input type="hidden" id="edit-type">
-                <div class="form-group">
-                    <label class="form-label" style="text-transform:uppercase;">New Value</label>
-                    <input class="form-input" id="edit-val" required>
+            <form id="edit-form" onsubmit="submitEdit(event)">
+                <div id="edit-form-body">
+                    <!-- Dynamic Content -->
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:30px;">
                     <button type="submit" class="btn btn-primary">Save Changes</button>
