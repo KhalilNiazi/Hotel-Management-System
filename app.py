@@ -136,7 +136,44 @@ def get_my_tasks():
 # --- ACTION ENDPOINTS ---
 
 
+
+@app.route('/api/checkout', methods=['POST'])
+def checkout():
+    data = request.json
+    gid = int(data.get('id'))
+    
+    found = False
+    bill = 0
+    
+    for i in range(backend.guest_count):
+        if backend.guest_data[i][0] == gid:
+            if backend.guest_data[i][4] == "Active":
+                # Mark Checked Out
+                backend.guest_data[i][4] = "CheckedOut"
+                backend.guest_data[i][6] = datetime.datetime.now().strftime("%Y-%m-%d") # Checkout Date
+                
+                # Calculate Bill (Simple: Price * 1 for now, or could store days)
+                rid = backend.guest_data[i][2]
+                price = 0
+                for r in range(backend.roomCount):
+                    if backend.hotelData[r][0] == rid:
+                         price = backend.hotelData[r][2]
+                         break
+                
+                bill = price # Default 1 day charge for simplicity
+                backend.guest_data[i][7] = bill
+                
+                backend.save_data()
+                found = True
+                break
+    
+    if found:
+        return jsonify({"status": "success", "message": f"Guest Checked Out. Bill: Rs. {bill}", "bill": bill})
+    else:
+        return jsonify({"status": "error", "message": "Guest not found or already checked out."})
+
 @app.route('/api/stats', methods=['GET'])
+
 def get_stats():
     # Calculate Total Revenue
     revenue = 0

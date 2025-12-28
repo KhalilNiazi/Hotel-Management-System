@@ -364,19 +364,61 @@ def administratorlogin():
             break
         print(f"Invalid Credentials or Access Denied! Remaining Attempts: {attempts}\n")
 
+
+def checkOutGuest():
+    global guest_count
+    # List Active
+    print("ACTIVE GUESTS:")
+    foundAny = False
+    for i in range(guest_count):
+        if guest_data[i][4] == "Active":
+            print(f"ID:{guest_data[i][0]} | Name:{guest_data[i][1]} | Room:{guest_data[i][2]} | CheckIn:{guest_data[i][5]}")
+            foundAny = True
+            
+    if not foundAny:
+        print("No active guests.")
+        return
+
+    try:
+        gid = int(input("Enter Guest ID to Checkout: "))
+        found = False
+        for i in range(guest_count):
+            if guest_data[i][0] == gid and guest_data[i][4] == "Active":
+                 guest_data[i][4] = "CheckedOut"
+                 guest_data[i][6] = datetime.datetime.now().strftime("%d/%m/%Y")
+                 
+                 # Calculate Bill
+                 price = 0
+                 rid = guest_data[i][2]
+                 for j in range(roomCount):
+                     if hotelData[j][0] == rid: price = hotelData[j][2]
+                 
+                 bill = price # Simplified
+                 guest_data[i][7] = bill
+                 found = True
+                 save_data()
+                 print(f"Guest Checked Out. Total Bill: {bill}")
+                 break
+        if not found: print("Invalid ID.")
+    except ValueError:
+        print("Invalid Input.")
+
 def administratordashboard():
+
     while True:
         header("ADMINISTRATOR DASHBOARD")
         element("-")
         print(f"{'[1]':<8} {'Add Rooms':<20} {'[2]':<8} {'View All Rooms':<20}")
         print(f"{'[3]':<8} {'Manage Staff':<20} {'[4]':<8} {'Worker Duties':<20}")
+
         print(f"{'[5]':<8} {'View Booking':<20} {'[6]':<8} {'Financials/Bill Report':<20}")
         print(f"{'[7]':<8} {'Attendance':<20} {'[8]':<8} {'System Stats':<20}")
+        print(f"{'[9]':<8} {'Check Out Guest':<20}")
         print(f"{'[0]':<8} {'Logout':<20}")
         element("-")
         
         try:
-            option = int(input("Enter the Option (0-to-8): "))
+            option = int(input("Enter the Option (0-to-9): "))
             if option == 1: addroom()
             elif option == 2: viewAllRooms()
             elif option == 3: ManageStaff()
@@ -385,6 +427,7 @@ def administratordashboard():
             elif option == 6: viewBillingReport()
             elif option == 7: viewAttendanceReport()
             elif option == 8: viewSystemStats()
+            elif option == 9: checkOutGuest()
             elif option == 0: return
             else: print("Invalid Option")
         except ValueError:

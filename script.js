@@ -266,9 +266,11 @@ async function loadView(viewType) {
     let html = `<table class="data-table" id="data-table"><thead><tr>`;
     keys.forEach((k) => (html += `<th>${k.toUpperCase()}</th>`));
     // Add Action Column for Admin/Manager
+
+    // Add Action Column for Admin/Manager
     if (
-      ["Admin", "Manager"].includes(currentRole) &&
-      (viewType === "rooms" || viewType === "staff")
+      ["Admin", "Manager", "Receptionist"].includes(currentRole) &&
+      (viewType === "rooms" || viewType === "staff" || viewType === "bookings")
     ) {
       html += `<th>ACTION</th>`;
     }
@@ -292,16 +294,25 @@ async function loadView(viewType) {
         html += `<td>${display}</td>`;
       });
       // Add Action Buttons logic
+
+      // Add Action Buttons logic
       if (["Admin", "Manager", "Receptionist"].includes(currentRole)) {
+        let actions = "";
         if (viewType === "rooms" && currentRole !== "Receptionist")
-          html += `<td><button class="action-btn edit-btn" onclick="openEdit('room', ${row.id}, '${row.price}')">Edit Price</button></td>`;
+          actions += `<button class="action-btn edit-btn" onclick="openEdit('room', ${row.id}, '${row.price}')">Edit Price</button> `;
         if (viewType === "staff" && currentRole === "Admin")
-          html += `<td><button class="action-btn edit-btn" onclick="openEdit('staff', ${row.id}, '${row.salary}')">Edit Salary</button></td>`;
-        if (
-          viewType === "guest_edit" ||
-          (viewType === "bookings" && currentRole === "Receptionist")
+          actions += `<button class="action-btn edit-btn" onclick="openEdit('staff', ${row.id}, '${row.salary}')">Edit Salary</button> `;
+        if (viewType === "bookings" && row.status === "Active") {
+          actions += `<button class="action-btn edit-btn" onclick="openEdit('guest', ${row.id}, '${row.name}')">Edit</button> `;
+          actions += `<button class="action-btn" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="checkoutGuest(${row.id})">Chk Out</button>`;
+        }
+
+        if (actions !== "") html += `<td>${actions}</td>`;
+        else if (
+          document.querySelector("#data-table th:last-child").innerText ===
+          "ACTION"
         )
-          html += `<td><button class="action-btn edit-btn" onclick="openEdit('guest', ${row.id}, '${row.name}')">Edit Name</button></td>`;
+          html += `<td>-</td>`;
       }
       html += `</tr>`;
     });
@@ -413,7 +424,25 @@ async function submitEdit(e) {
   }
 }
 
+async function checkoutGuest(id) {
+  if (!confirm("Are you sure you want to Check Out this guest?")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id }),
+    });
+    const data = await res.json();
+    alert(data.message);
+    if (data.status === "success") loadView("bookings");
+  } catch (e) {
+    alert("Action Failed");
+  }
+}
+
 // --- SEARCH ---
+
 function filterTable() {
   const input = document.getElementById("search-input");
   const filter = input.value.toUpperCase();

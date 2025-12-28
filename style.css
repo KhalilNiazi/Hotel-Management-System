@@ -61,6 +61,153 @@ body {
     padding-bottom: 1rem;
 }
 /* ... (auth styles continue normally) ... */
+/* Full screen background */
+.auth-bg {
+    position: fixed;
+    inset: 0;
+    background:
+        linear-gradient(120deg, rgba(20,20,40,0.7), rgba(40,20,60,0.7)),
+        url("https://images.unsplash.com/photo-1505693416388-ac5ce068fe85");
+    background-size: cover;
+    background-position: center;
+    filter: blur(14px);
+    transform: scale(1.1);
+    z-index: -1;
+}
+
+/* Center wrapper */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Glass card */
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: rgba(20, 20, 30, 0.65);
+    backdrop-filter: blur(18px);
+    border-radius: 18px;
+    padding: 28px 26px;
+    box-shadow:
+        0 20px 40px rgba(0,0,0,0.45),
+        inset 0 0 0 1px rgba(255,255,255,0.08);
+    color: #fff;
+    animation: fadeUp 0.6s ease;
+}
+
+/* Header */
+.auth-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.auth-logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.auth-logo ion-icon {
+    color: #c084fc;
+}
+
+.auth-subtitle {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #cbd5f5;
+    opacity: 0.85;
+}
+
+/* Role grid */
+.role-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 14px;
+    padding: 14px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-outline {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #e5e7eb;
+}
+
+.btn-outline:hover {
+    background: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    border: none;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+}
+
+/* Inputs */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    font-size: 0.7rem;
+    color: #c7d2fe;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    outline: none;
+}
+
+.form-input::placeholder {
+    color: #9ca3af;
+}
+
+.form-input:focus {
+    border-color: #a78bfa;
+    background: rgba(255,255,255,0.12);
+}
+
+/* Message */
+#login-msg {
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+/* Animation */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 /* --- DASHBOARD LAYOUT --- */
 .dashboard-layout {
