@@ -1,224 +1,222 @@
-import tkinter as tk
-from tkinter import messagebox, simpledialog, ttk
+
+import customtkinter as ctk
+import tkinter.messagebox as messagebox
+import tkinter.simpledialog as simpledialog
 import main as backend
 
-# Ensure data is loaded
+# --- THEME CONFIG ---
+ctk.set_appearance_mode("Dark")
+ctk.set_default_color_theme("dark-blue")
+
+# Brand Colors matching Web
+COLOR_BG = "#050505"       # Deep Black content background
+COLOR_SURFACE = "#121212"  # Card background
+COLOR_GOLD = "#d4af37"     # Gold Text/Accent
+COLOR_GOLD_HOVER = "#c5a028"
+COLOR_TEXT = "#ffffff"
+COLOR_TEXT_MUTED = "#a1a1aa"
+
 backend.load_data()
 
 class HotelGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Hotel Management System")
-        self.root.geometry("600x500")
+        self.root.title("Luxe Stay | Admin Suite")
+        self.root.geometry("900x600")
+        self.root.configure(fg_color=COLOR_BG)
         
-        self.create_main_menu()
+        # Load fonts if possible (CustomTkinter uses standard fonts but we can spec names)
+        # We'll use Times for Serif-like headings and Roboto/Arial for sans
+        self.font_head = ("Times New Roman", 32, "bold") 
+        self.font_sub = ("Arial", 12)
+        self.font_btn = ("Arial", 13, "bold")
+        
+        self.create_auth_screen()
 
     def clear_screen(self):
         for widget in self.root.winfo_children():
             widget.destroy()
 
-    def create_main_menu(self):
+    # --- AUTH / ROLE SELECTION ---
+    def create_auth_screen(self):
         self.clear_screen()
-        tk.Label(self.root, text="Hotel Management System", font=("Arial", 20, "bold")).pack(pady=20)
         
-        tk.Button(self.root, text="Administrator", command=self.admin_login, width=30, height=2).pack(pady=10)
-        tk.Button(self.root, text="Receptionist", command=self.receptionist_login, width=30, height=2).pack(pady=10)
-        tk.Button(self.root, text="Manager", command=self.manager_login, width=30, height=2).pack(pady=10)
-        tk.Button(self.root, text="Worker", command=self.worker_login, width=30, height=2).pack(pady=10)
-        tk.Button(self.root, text="Exit", command=self.root.quit, width=30, height=2, bg="#ffdddd").pack(pady=10)
-
-    # --- LOGIN SCREENS ---
-    
-    def admin_login(self):
-        self.login_screen("Admin", self.admin_dashboard)
-
-    def receptionist_login(self):
-        self.login_screen("Receptionist", self.receptionist_dashboard)
-
-    def manager_login(self):
-        self.login_screen("Manager", self.manager_dashboard)
+        # Central Card
+        card = ctk.CTkFrame(self.root, fg_color=COLOR_SURFACE, corner_radius=20, border_width=1, border_color="#333")
+        card.place(relx=0.5, rely=0.5, anchor="center", width=500, height=450)
         
-    def worker_login(self):
-        self.login_screen("Worker", self.worker_dashboard)
+        # Logo Area
+        # We can't easily do ionicons in tkinter without images, so we use text
+        ctk.CTkLabel(card, text="♦ Luxe Stay", font=self.font_head, text_color=COLOR_GOLD).pack(pady=(40, 5))
+        ctk.CTkLabel(card, text="PREMIUM HOTEL MANAGEMENT SYSTEM", font=("Arial", 10), text_color=COLOR_TEXT_MUTED).pack(pady=(0, 40))
+        
+        # Grid of roles
+        # Grid Frame
+        grid_frame = ctk.CTkFrame(card, fg_color="transparent")
+        grid_frame.pack(fill="both", expand=True, padx=40, pady=20)
+        
+        btn_config = {
+            "font": self.font_btn, 
+            "fg_color": "transparent", 
+            "border_width": 1, 
+            "border_color": "#444", 
+            "text_color": "#fff", 
+            "hover_color": "#222", 
+            "height": 50,
+            "corner_radius": 8
+        }
+        
+        # Buttons
+        ctk.CTkButton(grid_frame, text="Administrator", command=lambda: self.login_form("Admin"), **btn_config).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        ctk.CTkButton(grid_frame, text="Receptionist", command=lambda: self.login_form("Receptionist"), **btn_config).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        ctk.CTkButton(grid_frame, text="Manager", command=lambda: self.login_form("Manager"), **btn_config).grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+        ctk.CTkButton(grid_frame, text="Staff / Worker", command=lambda: self.login_form("Worker"), **btn_config).grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        
+        grid_frame.grid_columnconfigure(0, weight=1)
+        grid_frame.grid_columnconfigure(1, weight=1)
+        
+        # Exit
+        ctk.CTkButton(card, text="Exit Application", fg_color="transparent", text_color="#ef4444", hover_color="#330000", command=self.root.quit).pack(pady=20)
 
-    def login_screen(self, role, success_callback):
+    def login_form(self, role):
         self.clear_screen()
-        tk.Label(self.root, text=f"{role} Login", font=("Arial", 16)).pack(pady=20)
         
-        tk.Label(self.root, text="Username").pack()
-        user_entry = tk.Entry(self.root)
-        user_entry.pack()
+        # Central Card
+        card = ctk.CTkFrame(self.root, fg_color=COLOR_SURFACE, corner_radius=20, border_width=1, border_color=COLOR_GOLD)
+        card.place(relx=0.5, rely=0.5, anchor="center", width=400, height=500)
         
-        tk.Label(self.root, text="Password").pack()
-        pass_entry = tk.Entry(self.root, show="*")
-        pass_entry.pack()
+        # Header
+        ctk.CTkLabel(card, text="♦ Luxe Stay", font=("Times New Roman", 24), text_color=COLOR_GOLD).pack(pady=(40, 5))
+        ctk.CTkLabel(card, text=f"{role} Portal Login", font=("Arial", 12), text_color=COLOR_TEXT_MUTED).pack(pady=(0, 40))
         
-        def attempt_login():
-            username = user_entry.get()
-            password = pass_entry.get()
-            
-            # Validation Logic using backend data
+        # Inputs
+        ctk.CTkLabel(card, text="IDENTITY", font=("Arial", 10, "bold"), text_color=COLOR_TEXT_MUTED, anchor="w").pack(fill="x", padx=40)
+        user_entry = ctk.CTkEntry(card, height=40, border_color="#333", bg_color="transparent", fg_color="#000")
+        user_entry.pack(fill="x", padx=40, pady=(5, 20))
+        
+        ctk.CTkLabel(card, text="CREDENTIAL", font=("Arial", 10, "bold"), text_color=COLOR_TEXT_MUTED, anchor="w").pack(fill="x", padx=40)
+        pass_entry = ctk.CTkEntry(card, show="*", height=40, border_color="#333", bg_color="transparent", fg_color="#000")
+        pass_entry.pack(fill="x", padx=40, pady=(5, 30))
+        
+        # Auth Function
+        def attempt():
+            u = user_entry.get()
+            p = pass_entry.get()
             valid = False
-            found_role = ""
             for i in range(backend.userCount):
-                if backend.userData[i][1] == username and backend.userData[i][2] == password:
-                     found_role = backend.userData[i][3]
-                     # Admin can access everything, else exact match
-                     if role == "Admin" and found_role == "Admin": valid = True
-                     elif role == "Receptionist" and found_role in ["Receptionist", "Admin"]: valid = True
-                     elif role == "Manager" and found_role in ["Manager", "Admin"]: valid = True
-                     elif role == "Worker" and found_role in ["Worker", "Admin"]: valid = True
+                if backend.userData[i][1] == u and backend.userData[i][2] == p:
+                    # Role Check (Simplified: Admin allows all, else exact match)
+                    u_role = backend.userData[i][3]
+                    if u_role == role or u_role == "Admin":
+                        valid = True
             
             if valid:
-                if role == "Worker": success_callback(username)
-                else: success_callback()
+                self.load_dashboard(role, u)
             else:
-                messagebox.showerror("Error", "Invalid Credentials")
+                self.show_error("Access Denied", "Invalid Credentials")
 
-        tk.Button(self.root, text="Login", command=attempt_login).pack(pady=10)
-        tk.Button(self.root, text="Back", command=self.create_main_menu).pack()
-
-    # --- DASHBOARDS ---
-
-    def admin_dashboard(self):
-        self.clear_screen()
-        tk.Label(self.root, text="Admin Dashboard", font=("Arial", 16)).pack(pady=10)
+        # Action Buttons
+        ctk.CTkButton(card, text="AUTHENTICATE", fg_color=COLOR_GOLD, text_color="#000", hover_color=COLOR_GOLD_HOVER, height=45, font=("Arial", 12, "bold"), command=attempt).pack(fill="x", padx=40)
         
-        tk.Button(self.root, text="Add Room", command=self.add_room_ui).pack(fill="x")
-        tk.Button(self.root, text="View Rooms", command=self.view_rooms_ui).pack(fill="x")
-        tk.Button(self.root, text="Add Staff", command=self.add_staff_ui).pack(fill="x")
-        tk.Button(self.root, text="View Staff", command=self.view_staff_ui).pack(fill="x")
-        tk.Button(self.root, text="Reports", command=self.view_reports_ui).pack(fill="x")
-        
-        tk.Button(self.root, text="Logout", command=self.create_main_menu, bg="#ffdddd").pack(pady=20)
+        ctk.CTkButton(card, text="← Return", fg_color="transparent", text_color=COLOR_TEXT, hover_color="#222", command=self.create_auth_screen).pack(pady=15)
 
-    def receptionist_dashboard(self):
-        self.clear_screen()
-        tk.Label(self.root, text="Receptionist Dashboard", font=("Arial", 16)).pack(pady=10)
-        
-        tk.Button(self.root, text="Book Room", command=self.book_room_ui).pack(fill="x")
-        tk.Button(self.root, text="Check Out", command=self.checkout_ui).pack(fill="x")
-        tk.Button(self.root, text="View Rooms", command=self.view_rooms_ui).pack(fill="x")
-        tk.Button(self.root, text="Logout", command=self.create_main_menu, bg="#ffdddd").pack(pady=20)
+    def show_error(self, title, msg):
+        # Custom modal or simple messagebox
+        messagebox.showerror(title, msg)
 
-    def manager_dashboard(self):
+    # --- DASHBOARD (Generic for GUI) ---
+    def load_dashboard(self, role, username):
         self.clear_screen()
-        tk.Label(self.root, text="Manager Dashboard", font=("Arial", 16)).pack(pady=10)
-        tk.Button(self.root, text="View Rooms", command=self.view_rooms_ui).pack(fill="x")
-        tk.Button(self.root, text="View Reports", command=self.view_reports_ui).pack(fill="x")
-        tk.Button(self.root, text="Logout", command=self.create_main_menu, bg="#ffdddd").pack(pady=20)
-
-    def worker_dashboard(self, username):
-        self.clear_screen()
-        tk.Label(self.root, text=f"Worker: {username}", font=("Arial", 16)).pack(pady=10)
         
-        def mark_in():
-            backend.mark_attendance(username, "In")
-            messagebox.showinfo("Info", "Checked In")
-        def mark_out():
-            backend.mark_attendance(username, "Out")
-            messagebox.showinfo("Info", "Checked Out")
+        # Sidebar
+        sidebar = ctk.CTkFrame(self.root, width=240, corner_radius=0, fg_color=COLOR_SURFACE)
+        sidebar.pack(side="left", fill="y")
+        
+        ctk.CTkLabel(sidebar, text="♦ Luxe Stay", font=("Times New Roman", 20), text_color=COLOR_GOLD).pack(pady=40)
+        
+        ctk.CTkLabel(sidebar, text=f"Welcome, {username}", font=("Arial", 12, "bold"), text_color="#fff").pack(pady=(0,5))
+        ctk.CTkLabel(sidebar, text=role, font=("Arial", 10), text_color=COLOR_TEXT_MUTED).pack(pady=(0,30))
+        
+        # Menu Helper
+        def menu_btn(txt, cmd):
+            ctk.CTkButton(sidebar, text=txt, fg_color="transparent", text_color="#ccc", hover_color="#222", anchor="w", command=cmd).pack(fill="x", pady=2, padx=10)
             
-        tk.Button(self.root, text="Check In", command=mark_in).pack(fill="x")
-        tk.Button(self.root, text="Check Out", command=mark_out).pack(fill="x")
-        tk.Button(self.root, text="Logout", command=self.create_main_menu, bg="#ffdddd").pack(pady=20)
+        if role == "Admin":
+            menu_btn("Dashboard", lambda: self.show_view("Stats"))
+            menu_btn("Manage Rooms", lambda: self.show_view("Rooms"))
+            menu_btn("Manage Staff", lambda: self.show_view("Staff"))
+            menu_btn("Settings", lambda: self.show_view("Settings"))
 
-    # --- FUNCTIONAL UI ---
+        if role == "Receptionist":
+             menu_btn("New Booking", lambda: self.show_view("Booking"))
+             menu_btn("View Rooms", lambda: self.show_view("Rooms"))
+             menu_btn("Check Out", lambda: self.show_view("CheckOut"))
+             
+        menu_btn("Logout", self.create_auth_screen)
+        
+        # Main Area
+        self.main_area = ctk.CTkFrame(self.root, fg_color="#111", corner_radius=0)
+        self.main_area.pack(side="right", fill="both", expand=True)
+        
+        self.show_view("Default")
 
-    def add_room_ui(self):
-        rno = simpledialog.askinteger("Input", "Room Number:")
-        if rno:
-            rtype = simpledialog.askstring("Input", "Type (S/D/T/ST):")
-            rprice = simpledialog.askinteger("Input", "Price:")
-            
-            if rtype and rprice:
-                # Add to backend
-                backend.hotelData[backend.roomCount][0] = rno
-                backend.hotelData[backend.roomCount][1] = rtype.upper()
-                backend.hotelData[backend.roomCount][2] = rprice
-                backend.roomCount += 1
-                backend.save_data()
-                messagebox.showinfo("Success", "Room Added")
+    def show_view(self, view_name):
+        # Clear main area
+        for w in self.main_area.winfo_children(): w.destroy()
+        
+        # Header
+        ctk.CTkLabel(self.main_area, text=view_name.upper(), font=("Arial", 24, "bold"), text_color=COLOR_TEXT).pack(anchor="w", padx=30, pady=30)
+        
+        content = ctk.CTkFrame(self.main_area, fg_color="transparent")
+        content.pack(fill="both", expand=True, padx=30)
 
-    def view_rooms_ui(self):
-        win = tk.Toplevel(self.root)
-        win.title("Rooms")
-        text = tk.Text(win)
-        text.pack()
-        text.insert(tk.END, f"{'ROOM':<10}{'TYPE':<10}{'PRICE'}\n")
-        text.insert(tk.END, "-"*30 + "\n")
+        if view_name == "Rooms":
+            self.render_rooms(content)
+        elif view_name == "Staff":
+            self.render_staff(content)
+        elif view_name == "Stats":
+            self.render_stats(content)
+        else:
+            ctk.CTkLabel(content, text="Select an option from the sidebar.").pack()
+
+    def render_rooms(self, parent):
+        # Scrollable list
+        sf = ctk.CTkScrollableFrame(parent, fg_color="transparent")
+        sf.pack(fill="both", expand=True)
+        
         for i in range(backend.roomCount):
-            text.insert(tk.END, f"{backend.hotelData[i][0]:<10}{backend.hotelData[i][1]:<10}{backend.hotelData[i][2]}\n")
+            r = backend.hotelData[i]
+            # Card for Room
+            row = ctk.CTkFrame(sf, fg_color="#222")
+            row.pack(fill="x", pady=5)
+            ctk.CTkLabel(row, text=f"Room {r[0]} ({r[1]})", font=("Arial", 14, "bold")).pack(side="left", padx=10, pady=10)
+            ctk.CTkLabel(row, text=f"Rs.{r[2]}", text_color=COLOR_GOLD).pack(side="right", padx=10)
 
-    def add_staff_ui(self):
-        name = simpledialog.askstring("Input", "Username:")
-        pwd = simpledialog.askstring("Input", "Password:")
-        role = simpledialog.askstring("Input", "Role (Admin/Receptionist/Manager/Worker):")
-        if name and pwd and role:
-            backend.userData[backend.userCount][0] = backend.userCount
-            backend.userData[backend.userCount][1] = name
-            backend.userData[backend.userCount][2] = pwd
-            backend.userData[backend.userCount][3] = role
-            backend.userCount += 1
-            backend.save_data()
-            messagebox.showinfo("Success", "Staff Added")
-
-    def view_staff_ui(self):
-        win = tk.Toplevel(self.root)
-        text = tk.Text(win)
-        text.pack()
+    def render_staff(self, parent):
+        sf = ctk.CTkScrollableFrame(parent, fg_color="transparent")
+        sf.pack(fill="both", expand=True)
         for i in range(backend.userCount):
-             text.insert(tk.END, f"{backend.userData[i][1]} - {backend.userData[i][3]}\n")
+            u = backend.userData[i]
+            row = ctk.CTkFrame(sf, fg_color="#222")
+            row.pack(fill="x", pady=5)
+            ctk.CTkLabel(row, text=f"{u[1]}", font=("Arial", 14, "bold")).pack(side="left", padx=10, pady=10)
+            ctk.CTkLabel(row, text=f"{u[3]}").pack(side="right", padx=10)
 
-    def book_room_ui(self):
-        name = simpledialog.askstring("Data", "Guest Name:")
-        room = simpledialog.askinteger("Data", "Room No:")
-        if name and room:
-            # Simple booking logic replicating 'addNewBooking'
-            backend.guest_data[backend.guest_count][1] = name
-            backend.guest_data[backend.guest_count][2] = room
-            backend.guest_data[backend.guest_count][4] = "Active"
-            backend.guest_data[backend.guest_count][7] = 0
-            backend.guest_count += 1
-            backend.save_data()
-            messagebox.showinfo("Success", "Booked")
-
-    def checkout_ui(self):
-        room = simpledialog.askinteger("Data", "Room No to Checkout:")
-        days = simpledialog.askinteger("Data", "Days Stayed:")
-        if room and days:
-            # Find and update
-            found = False
-            for i in range(backend.guest_count):
-                if backend.guest_data[i][2] == room and backend.guest_data[i][4] == "Active":
-                     backend.guest_data[i][4] = "CheckedOut"
-                     # Find price
-                     price = 1000 # Default
-                     for r in range(backend.roomCount):
-                         if backend.hotelData[r][0] == room:
-                             price = backend.hotelData[r][2]
-                     bill = price * days
-                     backend.guest_data[i][7] = bill
-                     backend.save_data()
-                     messagebox.showinfo("Bill", f"Total Bill: {bill}")
-                     found = True
-                     break
-            if not found:
-                messagebox.showerror("Error", "Booking not found")
-
-    def view_reports_ui(self):
-        win = tk.Toplevel(self.root)
-        text = tk.Text(win)
-        text.pack()
-        text.insert(tk.END, "BILLING REPORT\n")
-        total = 0
-        for i in range(backend.guest_count):
-             if backend.guest_data[i][4] == "CheckedOut":
-                 text.insert(tk.END, f"{backend.guest_data[i][1]}: {backend.guest_data[i][7]}\n")
-                 total += backend.guest_data[i][7]
-        text.insert(tk.END, f"TOTAL: {total}")
+    def render_stats(self, parent):
+        # Stats Cards
+        grid = ctk.CTkFrame(parent, fg_color="transparent")
+        grid.pack(fill="x")
+        
+        def stat_card(title, value, col):
+            f = ctk.CTkFrame(grid, fg_color="#222", border_width=1, border_color="#333")
+            f.pack(side="left", fill="both", expand=True, padx=5)
+            ctk.CTkLabel(f, text=title, text_color=COLOR_TEXT_MUTED).pack(pady=(15,0))
+            ctk.CTkLabel(f, text=value, font=("Times New Roman", 24), text_color=COLOR_GOLD).pack(pady=(5,15))
+            
+        stat_card("Total Guests", str(backend.guest_count), 0)
+        stat_card("Total Rooms", str(backend.roomCount), 1)
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = HotelGUI(root)
-    root.mainloop()
+    app = ctk.CTk()
+    gui = HotelGUI(app)
+    app.mainloop()

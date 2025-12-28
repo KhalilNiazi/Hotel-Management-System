@@ -34,10 +34,13 @@ guest_data = [[0, 'GN', 'RN', 'PN', 'S', 'CI', 'CO', 0] for _ in range(MAX_GUEST
 # Attendance Data
 MAX_ATTENDANCE = 10000
 attendance_count = 0
+
 # Format: [ID, WorkerName, Date, Status, TimeIn, TimeOut]
+attendanceData = [[0, 'WN', 'D', 'S', 'TI', 'TO'] for _ in range(MAX_ATTENDANCE)]
 
 # Settings
 hotel_config = {"name": "Luxe Stay"}
+
 
 def load_settings():
     global hotel_config
@@ -52,11 +55,107 @@ def save_settings():
     with open("data/settings.txt", "w") as f:
         f.write(f"name={hotel_config['name']}\n")
 
+
+import requests
+import json
+import requests.exceptions
+
+# Config to switch betwen local and cloud
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8dz952nhMYHVDDKtcdyJlRivoiy3HEyePPW15X5VwcQirXRg9_JcF0X6B7tpXlNAHbg/exec" # User needs to paste their URL here
+USE_CLOUD = False    # Set to True to enable
+
 def load_data():
     global roomCount, userCount, taskCount, guest_count, attendance_count
     load_settings()
     
+    if USE_CLOUD and APPS_SCRIPT_URL:
+        # --- CLOUD LOAD ---
+        try:
+            print("fetching data from cloud...")
+            response = requests.get(APPS_SCRIPT_URL + "?action=read")
+            data = response.json()
+            
+            # Rooms
+            if "Rooms" in data:
+                rows = data["Rooms"]
+                roomCount = 0
+                for r in rows:
+                    if roomCount < MAX_CAP:
+                         hotelData[roomCount][0] = int(r[0])
+                         hotelData[roomCount][1] = str(r[1])
+                         hotelData[roomCount][2] = int(r[2])
+                         roomCount += 1
+
+            # Users
+            if "Users" in data:
+                rows = data["Users"]
+                userCount = 0
+                for r in rows:
+                    if userCount < MAX_USER:
+                        userData[userCount][0] = int(r[0])
+                        userData[userCount][1] = str(r[1])
+                        userData[userCount][2] = str(r[2])
+                        userData[userCount][3] = str(r[3])
+                        while len(userData[userCount]) < 5: userData[userCount].append("0") 
+                        userData[userCount][4] = str(r[4]) if len(r)>4 else "0"
+                        userCount += 1
+
+            # Tasks
+            if "Tasks" in data:
+                rows = data["Tasks"]
+                taskCount = 0
+                for r in rows:
+                    if taskCount < MAX_TASK:
+                        assignTask[taskCount][0] = int(r[0])
+                        assignTask[taskCount][1] = str(r[1])
+                        assignTask[taskCount][2] = str(r[2])
+                        assignTask[taskCount][3] = str(r[3])
+                        taskCount += 1
+
+            # Guests
+            if "Guests" in data:
+                rows = data["Guests"]
+                guest_count = 0
+                for r in rows:
+                    if guest_count < MAX_GUEST:
+                        guest_data[guest_count][0] = int(r[0])
+                        guest_data[guest_count][1] = str(r[1])
+                        guest_data[guest_count][2] = int(r[2])
+                        guest_data[guest_count][3] = str(r[3])
+                        guest_data[guest_count][4] = str(r[4])
+                        guest_data[guest_count][5] = str(r[5])
+                        guest_data[guest_count][6] = str(r[6])
+                        if len(r) > 7: guest_data[guest_count][7] = int(r[7])
+                        else: guest_data[guest_count][7] = 0
+                        guest_count += 1
+            
+            # Attendance
+            if "Attendance" in data:
+                rows = data["Attendance"]
+                attendance_count = 0
+                for r in rows:
+                    if attendance_count < MAX_ATTENDANCE:
+                         attendanceData[attendance_count][0] = int(r[0])
+                         attendanceData[attendance_count][1] = str(r[1])
+                         attendanceData[attendance_count][2] = str(r[2])
+                         attendanceData[attendance_count][3] = str(r[3])
+                         attendanceData[attendance_count][4] = str(r[4])
+                         attendanceData[attendance_count][5] = str(r[5])
+                         attendance_count += 1
+
+            # Settings
+            if "Settings" in data and len(data["Settings"]) > 0:
+                 # Assume row 1 col 1 is name
+                 hotel_config["name"] = str(data["Settings"][0][0])
+
+            return # Skip file load if cloud successful
+        except Exception as e:
+            print(f"Cloud Error: {e}")
+            # Fallback to local
+    
+    # --- FILE LOAD (Existing Code) ---
     # Load Rooms
+
 
     if os.path.exists("data/rooms.txt"):
         with open("data/rooms.txt", "r") as f:
@@ -156,9 +255,29 @@ def load_data():
                     idx += 1
             attendance_count = idx
 
+
 def save_data():
+    save_settings()
+    
+    if USE_CLOUD and APPS_SCRIPT_URL:
+        # --- CLOUD SAVE ---
+        try:
+            payload = {
+                "Rooms": [hotelData[i][:3] for i in range(roomCount)],
+                "Users": [userData[i][:5] for i in range(userCount)],
+                "Tasks": [assignTask[i][:4] for i in range(taskCount)],
+                "Guests": [guest_data[i][:8] for i in range(guest_count)],
+                "Attendance": [attendanceData[i][:6] for i in range(attendance_count)],
+                "Settings": [[hotel_config["name"]]]
+            }
+            # Send Async if possible, but here we sync wait
+            requests.post(APPS_SCRIPT_URL, json=payload)
+        except Exception as e:
+            print(f"Cloud Save Error: {e}")
+
     # Save Rooms
     with open("data/rooms.txt", "w") as f:
+
         for i in range(roomCount):
             f.write(f"{hotelData[i][0]},{hotelData[i][1]},{hotelData[i][2]}\n")
 
