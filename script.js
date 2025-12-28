@@ -6,16 +6,35 @@ let allRoomData = []; // Store for filtering
 
 // --- AUTH LOGIC ---
 function showLoginInfo(role) {
+  // Hide the Role Grid
   document.getElementById("role-view").style.display = "none";
+  // Show the Login Form
   document.getElementById("login-form").style.display = "block";
+
   document.getElementById("selected-role").value = role;
-  document.getElementById("login-msg").innerText = `Logging in as ${role}`;
+
+  // Update Header text to show which portal we are accessing
+  const subtitle = document.querySelector(".auth-subtitle");
+  if (subtitle) subtitle.innerText = `${role} Portal Login`;
+
+  // Clear previous messages and focus
+  document.getElementById("login-msg").innerText = "";
+  document.getElementById("username").focus();
 }
 
 function backToRoles() {
+  // Hide the Login Form
   document.getElementById("login-form").style.display = "none";
+  // Show the Role Grid
   document.getElementById("role-view").style.display = "block";
+
+  // Reset Header and Inputs
+  const subtitle = document.querySelector(".auth-subtitle");
+  if (subtitle) subtitle.innerText = "Premium Hotel Management System";
+
   document.getElementById("login-msg").innerText = "";
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
 }
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
