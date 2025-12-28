@@ -1,5 +1,11 @@
+
 import datetime
 import os
+import colorama
+from colorama import Fore, Back, Style
+
+# Auto-reset colors after each print
+colorama.init(autoreset=True)
 
 space = " "
 
@@ -17,7 +23,7 @@ userCount = 1
 # Format: [UserID, Username, Password, Role]
 userData = [[-1, "U", "P", "R"] for _ in range(MAX_USER)]
 # Default Admin (will be overwritten if file exists)
-userData[0] = [0, "admin", "1122", "Admin"]
+userData[0] = [0, "admin", "admin123", "Admin"]
 
 # Task Data
 MAX_TASK = 1000
@@ -236,15 +242,18 @@ def save_data():
         for i in range(attendance_count):
             f.write(f"{attendanceData[i][0]},{attendanceData[i][1]},{attendanceData[i][2]},{attendanceData[i][3]},{attendanceData[i][4]},{attendanceData[i][5]}\n")
 
+
 # --- UTILS ---
 
+# Note: 'header' is redefined below in the main loop area so this one is redundant or shadowed.
+# We will update it to match the colorful one anyway to be safe.
 def header(name):
-    print("=" * 55)
-    print(f"{name:^55}")
-    print("=" * 55)
-
+    print(Fore.CYAN + "=" * 55)
+    print(Fore.YELLOW + Style.BRIGHT + f"{name:^55}")
+    print(Fore.CYAN + "=" * 55)
+    
 def element(dash):
-    print(dash * 55)
+    print(Fore.CYAN + dash * 55)
 
 def is_valid_room_number(room):
     if room > int(MAX_CAP):
@@ -792,21 +801,31 @@ def viewMyTasks(name):
     input("Press Enter...")
 
 
+
+def header(name):
+    print(Fore.CYAN + "=" * 55)
+    print(Fore.YELLOW + Style.BRIGHT + f"{name:^55}")
+    print(Fore.CYAN + "=" * 55)
+
+def element(dash):
+    print(Fore.CYAN + dash * 55)
+
 # --- MAIN ---
 
 def main():
     load_data()
     while True:
+        os.system('cls' if os.name == 'nt' else 'clear')
         header("Hostel Management System")
-        print("\nWelcome! Please select your role to access the system\n")
-        print("-" * 55)
-        print(f"[1] ADMINISTRATOR{space:<10} [2] RECEPTIONIST")
-        print(f"[3] MANAGER{space:<16} [4] WORKER / STAFF")
-        print(f"[5] Exit")
-        print("-"*55)
+        print(Fore.GREEN + "\nWelcome! Please select your role to access the system\n")
+        print(Fore.CYAN + "-" * 55)
+        print(Fore.WHITE + f"[{Fore.MAGENTA}1{Fore.WHITE}] ADMINISTRATOR{space:<10} [{Fore.MAGENTA}2{Fore.WHITE}] RECEPTIONIST")
+        print(Fore.WHITE + f"[{Fore.MAGENTA}3{Fore.WHITE}] MANAGER{space:<16} [{Fore.MAGENTA}4{Fore.WHITE}] WORKER / STAFF")
+        print(Fore.RED + f"[5] Exit")
+        print(Fore.CYAN + "-"*55)
         
         try:
-            option_str = input("Enter the Option (1-to-5): ")
+            option_str = input(Fore.YELLOW + "Enter the Option (1-to-5): " + Fore.RESET)
             if not option_str.isdigit(): continue
             option = int(option_str)
             
@@ -816,12 +835,14 @@ def main():
             elif option == 4: worker()
             elif option == 5:
                 save_data()
-                print("Goodbye!")
+                print(Fore.RED + "Goodbye!")
                 return
             else:
-                print("Invalid Option")
+                print(Fore.RED + "Invalid Option")
+                input("Press Enter...")
         except Exception as e:
-            print(f"Error: {e}")
+            print(Fore.RED + f"Error: {e}")
+            input("Press Enter...")
 
 if __name__ == "__main__":
     main()

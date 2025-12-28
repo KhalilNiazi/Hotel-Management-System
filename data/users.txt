@@ -1,4 +1,4 @@
-0,admin,1122,Admin,100000
+0,admin,admin123,Admin,100000
 1,recept1,123,Receptionist,45000
 2,recept2,123,Receptionist,45000
 3,recept3,123,Receptionist,45000

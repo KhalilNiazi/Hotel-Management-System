@@ -54,10 +54,12 @@ class HotelGUI:
             "hover_color": "#222", "height": 50, "corner_radius": 8, "width": 190
         }
         
+
         ctk.CTkButton(grid_frame, text="Administrator", command=lambda: self.login_form("Admin"), **btn_config).grid(row=0, column=0, padx=5, pady=5)
-        ctk.CTkButton(grid_frame, text="Receptionist", command=lambda: self.login_form("Receptionist"), **btn_config).grid(row=0, column=1, padx=5, pady=5)
-        ctk.CTkButton(grid_frame, text="Manager", command=lambda: self.login_form("Manager"), **btn_config).grid(row=1, column=0, padx=5, pady=5)
-        ctk.CTkButton(grid_frame, text="Staff / Worker", command=lambda: self.login_form("Worker"), **btn_config).grid(row=1, column=1, padx=5, pady=5)
+        # Using specific color accents for roles
+        ctk.CTkButton(grid_frame, text="Receptionist", command=lambda: self.login_form("Receptionist"), fg_color="#1e1e2e", border_color="#333", text_color="#a6e3a1", hover_color="#313244", height=50, corner_radius=8, width=190, font=("Arial", 13, "bold")).grid(row=0, column=1, padx=5, pady=5)
+        ctk.CTkButton(grid_frame, text="Manager", command=lambda: self.login_form("Manager"), fg_color="#1e1e2e", border_color="#333", text_color="#f9e2af", hover_color="#313244", height=50, corner_radius=8, width=190, font=("Arial", 13, "bold")).grid(row=1, column=0, padx=5, pady=5)
+        ctk.CTkButton(grid_frame, text="Staff / Worker", command=lambda: self.login_form("Worker"), fg_color="#1e1e2e", border_color="#333", text_color="#f38ba8", hover_color="#313244", height=50, corner_radius=8, width=190, font=("Arial", 13, "bold")).grid(row=1, column=1, padx=5, pady=5)
         
         ctk.CTkButton(card, text="Exit Application", fg_color="transparent", text_color="#ef4444", hover_color="#330000", command=self.root.quit).place(relx=0.5, rely=0.9, anchor="center")
 

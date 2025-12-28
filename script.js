@@ -183,10 +183,11 @@ async function loadView(viewType) {
             </div>`;
     return;
   }
+
   if (viewType === "add_staff") {
     area.innerHTML = `
             <div style="padding:20px; max-width:600px;">
-                <form onsubmit="postData(event, 'add_staff')">
+                <form onsubmit="postData(event, 'add_staff', 'staff')">
                     <div class="form-group"><label class="form-label">Username</label><input class="form-input" name="username" required></div>
                     <div class="form-group"><label class="form-label">Password</label><input class="form-input" name="password" required></div>
                     <div class="form-group"><label class="form-label">Role</label>
@@ -280,8 +281,10 @@ async function loadView(viewType) {
     rooms: "rooms",
     staff: "staff",
     bookings: "bookings",
+    guest_edit: "bookings",
     tasks: "tasks",
-    finance: "stats",
+    finance: "bookings",
+    attendance_report: "attendance",
   };
 
   if (apiMap[viewType]) endpoint = apiMap[viewType];
@@ -312,18 +315,20 @@ async function loadView(viewType) {
       let keys = Object.keys(data[0]);
 
       // Determine if Actions should be shown
+
       const showActions =
         ["Admin", "Manager", "Receptionist"].includes(currentRole) &&
         (viewType === "rooms" ||
           viewType === "staff" ||
-          viewType === "bookings");
+          viewType === "bookings" ||
+          viewType === "guest_edit");
 
       let html = `<table class="data-table" id="data-table"><thead><tr>`;
       keys.forEach(
         (k) => (html += `<th>${k.toUpperCase().replace("_", " ")}</th>`)
       );
 
-      if (showActions) html += `<th>ACTION</th>`;
+      if (showActions) html += `<th style="text-align:right">ACTION</th>`;
 
       html += `</tr></thead><tbody>`;
 
@@ -341,6 +346,8 @@ async function loadView(viewType) {
               display = `<span class="status-badge status-available">Available</span>`;
             else if (lower === "checkedout")
               display = `<span class="status-badge status-checkedout">Checked Out</span>`;
+            else if (lower === "present")
+              display = `<span class="status-badge status-active">Present</span>`;
           }
           html += `<td>${display}</td>`;
         });
@@ -360,13 +367,13 @@ async function loadView(viewType) {
           }
 
           // Booking Actions
-          else if (viewType === "bookings") {
+          else if (viewType === "bookings" || viewType === "guest_edit") {
             actions += `<button class="action-btn edit-btn" onclick="openEdit('guest', ${row.id})">Edit</button> `;
             if (row.status === "Active")
               actions += `<button class="action-btn chkout-btn" onclick="checkoutGuest(${row.id})">Chk Out</button>`;
           }
 
-          html += `<td>${actions || "-"}</td>`;
+          html += `<td style="text-align:right">${actions || "-"}</td>`;
         }
         html += `</tr>`;
       });
@@ -594,9 +601,58 @@ async function checkoutGuest(id) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: id }),
     });
+
     const data = await res.json();
-    alert(data.message);
-    if (data.status === "success") loadView("bookings");
+    if (data.status === "success" && data.bill !== undefined) {
+      // FANCY INVOICE GENERATION
+      // Open a new window with the invoice details
+      const win = window.open("", "_blank", "width=800,height=600");
+      win.document.write(`
+            <html>
+            <head>
+                <title>Luxe Stay | Invoice</title>
+                <style>
+                    body { font-family: 'Georgia', serif; padding: 40px; background: #fffcf5; color: #333; }
+                    .header { text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 20px; margin-bottom: 30px; }
+                    .logo { font-size: 32px; font-weight: bold; color: #d4af37; margin-bottom: 10px; }
+                    .subtitle { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #666; }
+                    .details { margin-bottom: 30px; line-height: 1.6; }
+                    .bill-box { border: 1px solid #ddd; padding: 20px; background: #fff; margin-bottom: 30px; }
+                    .total { font-size: 24px; font-weight: bold; text-align: right; margin-top: 20px; color: #d4af37; }
+                    .footer { text-align: center; font-size: 12px; color: #999; margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px; }
+                    @media print { body { background: white; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="logo">♦ Luxe Stay</div>
+                    <div class="subtitle">Premium Hospitality Invoice</div>
+                </div>
+                <div class="details">
+                    <p><strong>Invoice ID:</strong> #${new Date()
+                      .getTime()
+                      .toString()
+                      .slice(-6)}</p>
+                    <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                    <p><strong>Guest ID:</strong> ${id}</p>
+                </div>
+                <div class="bill-box">
+                    <h3>Checkout Summary</h3>
+                    <p>Room Charges & Services .................................... Rs. ${data.bill.toLocaleString()}</p>
+                    <div class="total">Total Paid: Rs. ${data.bill.toLocaleString()}</div>
+                </div>
+                <div class="footer">
+                    Thank you for staying with Luxe Stay. We hope to see you again.<br>
+                    Generated automatically by HMS.
+                </div>
+                <script>window.print();</script>
+            </body>
+            </html>
+         `);
+      loadView("bookings");
+    } else {
+      alert(data.message);
+    }
   } catch (e) {
     alert("Action Failed");
   }
