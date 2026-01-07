@@ -243,11 +243,33 @@ def save_data():
             f.write(f"{attendanceData[i][0]},{attendanceData[i][1]},{attendanceData[i][2]},{attendanceData[i][3]},{attendanceData[i][4]},{attendanceData[i][5]}\n")
 
 
+
+
 # --- UTILS ---
+
+def clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def set_console_size():
+    if os.name == 'nt':
+        try:
+            # Attempt to maximize the console window
+            import ctypes
+            kernel32 = ctypes.WinDLL('kernel32')
+            user32 = ctypes.WinDLL('user32')
+            
+            hwnd = kernel32.GetConsoleWindow()
+            if hwnd:
+                user32.ShowWindow(hwnd, 3) # SW_MAXIMIZE = 3
+        except Exception:
+            pass # Fail silently if not supported
 
 # Note: 'header' is redefined below in the main loop area so this one is redundant or shadowed.
 # We will update it to match the colorful one anyway to be safe.
-def header(name):
+def header(name=None):
+    if name is None or name == "Hostel Management System": 
+        name = hotel_config.get("name", "Luxe Stay")
+        
     print(Fore.CYAN + "=" * 55)
     print(Fore.YELLOW + Style.BRIGHT + f"{name:^55}")
     print(Fore.CYAN + "=" * 55)
@@ -276,8 +298,9 @@ def get_room_type_name(type):
 
 # --- ADMIN FUNCTIONS ---
 
+
 def administratorlogin():
-    header("Hostel Management System")
+    header()
     print(f"{'[ AUTHENTICATION REQUIRED ]':^55}\n")
     element("-")
     attempts = 3 
@@ -303,60 +326,150 @@ def administratorlogin():
         print(f"Invalid Credentials or Access Denied! Remaining Attempts: {attempts}\n")
 
 
+
 def checkOutGuest():
     global guest_count
+    header("GUEST CHECKOUT & BILLING")
+    
     # List Active
-    print("ACTIVE GUESTS:")
+    print(Fore.CYAN + "ACTIVE GUESTS:")
     foundAny = False
     for i in range(guest_count):
         if guest_data[i][4] == "Active":
-            print(f"ID:{guest_data[i][0]} | Name:{guest_data[i][1]} | Room:{guest_data[i][2]} | CheckIn:{guest_data[i][5]}")
+            print(f"ID:{guest_data[i][0]:<4} | Name:{guest_data[i][1]:<15} | Room:{guest_data[i][2]:<5} | In:{guest_data[i][5]}")
             foundAny = True
             
     if not foundAny:
-        print("No active guests.")
+        print(Fore.RED + "No active guests.")
         return
 
     try:
-        gid = int(input("Enter Guest ID to Checkout: "))
-        found = False
+        val = input(Fore.YELLOW + "Enter Guest ID to Checkout (X to back): " + Fore.RESET)
+        if val.upper() == 'X': return
+        
+        gid = int(val)
+        idx = -1
         for i in range(guest_count):
             if guest_data[i][0] == gid and guest_data[i][4] == "Active":
-                 guest_data[i][4] = "CheckedOut"
-                 guest_data[i][6] = datetime.datetime.now().strftime("%d/%m/%Y")
-                 
-                 # Calculate Bill
-                 price = 0
-                 rid = guest_data[i][2]
-                 for j in range(roomCount):
-                     if hotelData[j][0] == rid: price = hotelData[j][2]
-                 
-                 bill = price # Simplified
-                 guest_data[i][7] = bill
-                 found = True
-                 save_data()
-                 print(f"Guest Checked Out. Total Bill: {bill}")
+                 idx = i
                  break
-        if not found: print("Invalid ID.")
+        
+        if idx == -1:
+             print(Fore.RED + "Guest ID not found or not active.")
+             return
+
+        # Found Guest
+        # 1. Calculate Days
+        checkin_str = guest_data[idx][5]
+        checkout_now = datetime.datetime.now()
+        
+        try:
+            checkin_dt = datetime.datetime.strptime(checkin_str, "%d/%m/%Y %H:%M")
+        except ValueError:
+            # Fallback if format is just date or invalid
+            try:
+                checkin_dt = datetime.datetime.strptime(checkin_str, "%d/%m/%Y")
+            except:
+                checkin_dt = checkout_now
+        
+        duration = checkout_now - checkin_dt
+        days = duration.days
+        if days < 1: days = 1  # Charge minimum 1 day
+        
+        # 2. Get Room Price
+        room_price = 0
+        rno = guest_data[idx][2]
+        for i in range(roomCount):
+            if hotelData[i][0] == rno:
+                room_price = hotelData[i][2]
+                break
+                
+        base_bill = days * room_price
+        
+        # 3. Interactive Billing
+        print(Fore.GREEN + "\n--- BILL CALCULATION ---")
+        print(f"Guest Name: {guest_data[idx][1]}")
+        print(f"Stay Duration: {days} Days")
+        print(f"Room Charge: {base_bill} (Rate: {room_price}/night)")
+        
+
+        try:
+            extra_input = input("Add Extra Charges (Food/Services) [0]: ").strip()
+            if not extra_input: 
+                extra = 0
+            else: 
+                extra = int(extra_input)
+        except ValueError:
+            extra = 0
+            
+        total_bill = base_bill + extra
+        
+
+        print(Fore.YELLOW + f"TOTAL BILL AMOUNT: Rs. {total_bill}")
+        
+        conf = input("Confirm Checkout & Save? (Y/N): ")
+        if conf.upper() == 'Y':
+            guest_data[idx][4] = "CheckedOut"
+            guest_data[idx][6] = checkout_now.strftime("%d/%m/%Y %H:%M")
+            guest_data[idx][7] = total_bill
+            save_data()
+            print(Fore.GREEN + "[SUCCESS] Guest Checked Out.")
+            
+
+            # Print/PDF Option
+            if input("Generate Invoice? (Y/N): ").upper() == 'Y':
+                h_name = hotel_config.get("name", "Luxe Stay").upper()
+                invoice_text = f"""
+                    ===================================================
+                                {h_name:^35}
+                    ===================================================
+                    INVOICE ID: #{int(datetime.datetime.now().timestamp())}
+                    DATE      : {checkout_now.strftime("%d-%b-%Y %I:%M %p")}
+                    ---------------------------------------------------
+                    GUEST NAME  : {guest_data[idx][1]}
+                    ROOM NO     : {guest_data[idx][2]} 
+                    DURATION    : {days} Night(s)
+                    ---------------------------------------------------
+                    Room Charge : Rs. {base_bill}
+                    Extra       : Rs. {extra}
+                    ---------------------------------------------------
+                    TOTAL       : Rs. {total_bill}
+                    ===================================================
+                    Thank you for choosing {h_name.title()}!
+                    """
+                fname = f"invoice_{gid}_{int(datetime.datetime.now().timestamp())}.txt"
+                with open(fname, "w") as f:
+                    f.write(invoice_text)
+                print(Fore.CYAN + f"Invoice saved to {fname}")
+                # Try to open file (simulating print/pdf view)
+                try:
+                    os.startfile(fname)
+                except:
+                    pass
+        else:
+            print(Fore.RED + "Cancelled.")
+
     except ValueError:
-        print("Invalid Input.")
+        print(Fore.RED + "Invalid Input.")
 
 def administratordashboard():
 
     while True:
+        clear()
         header("ADMINISTRATOR DASHBOARD")
         element("-")
-        print(f"{'[1]':<8} {'Add Rooms':<20} {'[2]':<8} {'View All Rooms':<20}")
-        print(f"{'[3]':<8} {'Manage Staff':<20} {'[4]':<8} {'Worker Duties':<20}")
-
-        print(f"{'[5]':<8} {'View Booking':<20} {'[6]':<8} {'Financials/Bill Report':<20}")
-        print(f"{'[7]':<8} {'Attendance':<20} {'[8]':<8} {'System Stats':<20}")
-        print(f"{'[9]':<8} {'Check Out Guest':<20}")
-        print(f"{'[0]':<8} {'Logout':<20}")
+        print(Fore.WHITE + f"{'[1]':<8} {Fore.YELLOW}{'Add Rooms':<25} {Fore.WHITE}{'[2]':<8} {Fore.YELLOW}{'View All Rooms':<25}")
+        print(Fore.WHITE + f"{'[3]':<8} {Fore.YELLOW}{'Manage Staff':<25} {Fore.WHITE}{'[4]':<8} {Fore.YELLOW}{'Worker Duties':<25}")
+        print(Fore.WHITE + f"{'[5]':<8} {Fore.YELLOW}{'View Booking':<25} {Fore.WHITE}{'[6]':<8} {Fore.YELLOW}{'Financials/Bill Report':<25}")
+        print(Fore.WHITE + f"{'[7]':<8} {Fore.YELLOW}{'Attendance':<25} {Fore.WHITE}{'[8]':<8} {Fore.YELLOW}{'System Stats':<25}")
+        print(Fore.WHITE + f"{'[9]':<8} {Fore.YELLOW}{'Check Out Guest':<25} {Fore.WHITE}{'[10]':<8} {Fore.YELLOW}{'Settings':<25}")
+        print(Fore.RED   + f"{'[0]':<8} {'Logout':<25}")
         element("-")
         
         try:
-            option = int(input("Enter the Option (0-to-9): "))
+            option_str = input(Fore.CYAN + "Enter Option (0-10): " + Fore.RESET)
+            if not option_str.isdigit(): continue
+            option = int(option_str)
             if option == 1: addroom()
             elif option == 2: viewAllRooms()
             elif option == 3: ManageStaff()
@@ -366,10 +479,28 @@ def administratordashboard():
             elif option == 7: viewAttendanceReport()
             elif option == 8: viewSystemStats()
             elif option == 9: checkOutGuest()
+            elif option == 10: system_settings()
             elif option == 0: return
-            else: print("Invalid Option")
+            else: print(Fore.RED + "Invalid Option")
         except ValueError:
-            print("Invalid Input")
+            print(Fore.RED + "Invalid Input")
+
+def system_settings():
+    clear()
+    header("SYSTEM SETTINGS")
+    print(f"Current Hotel Name: {hotel_config['name']}")
+    print("-" * 30)
+    print("[1] Change Hotel Name")
+    print("[0] Back")
+    
+    opt = input("Option: ")
+    if opt == '1':
+        new_name = input("Enter New Hotel Name: ")
+        if new_name.strip():
+            hotel_config["name"] = new_name.strip()
+            save_settings()
+            print("Settings Saved.")
+    
 
 def roomtypes():
     print("AVAILABLE ROOM TYPES:")
@@ -383,9 +514,13 @@ def addroom():
     header("ADD NEW ROOM")
     roomtypes()
     
+
     while True:
         try:
-            New_RoomNO = int(input(f"Room No[1-to-{MAX_CAP}]: "))
+            val = input(f"Room No[1-to-{MAX_CAP}] (X to back): ")
+            if val.lower() == 'x': return
+            
+            New_RoomNO = int(val)
             if is_valid_room_number(New_RoomNO):
                 exists = False
                 for i in range(roomCount):
@@ -422,18 +557,21 @@ def addroom():
 
 def viewAllRooms():
     header("ROOM INVENTORY LIST")
-    print(f"{'ROOM NO':<10} {'TYPE':<20} PRICE (PKR)")
+    print(Fore.CYAN + f"{'ROOM NO':<10} {'TYPE':<20} {'PRICE (PKR)'}")
     element("-")
     for i in range(roomCount):
-        print(f"{hotelData[i][0]:<10} {hotelData[i][1]:<20} {hotelData[i][2]}")
+        print(Fore.WHITE + f"{hotelData[i][0]:<10} {hotelData[i][1]:<20} {hotelData[i][2]}")
     element("-")
     
-    opt = input("[M] Manage Rooms / [X] Back: ").upper()
+    opt = input(Fore.YELLOW + "[M] Manage Rooms / [X] Back: " + Fore.RESET).upper()
     if opt == 'M': manageRooms()
 
 def manageRooms():
     global roomCount
-    s_room = int(input("Enter Room No to Manage: "))
+    try:
+        s_room = int(input(Fore.YELLOW + "Enter Room No to Manage: " + Fore.RESET))
+    except ValueError: return
+    
     idx = -1
     for i in range(roomCount):
         if hotelData[i][0] == s_room:
@@ -441,11 +579,11 @@ def manageRooms():
             break
     
     if idx == -1:
-        print("Room not found.")
+        print(Fore.RED + "Room not found.")
         return
         
-    print(f"Found: {hotelData[idx]}")
-    opt = input("[1] Edit / [2] Delete / [0] Cancel: ")
+    print(Fore.GREEN + f"Found: {hotelData[idx]}")
+    opt = input(Fore.YELLOW + "[1] Edit / [2] Delete / [0] Cancel: " + Fore.RESET)
     
     if opt == '1':
         rt = input("New Type (S/D/T/ST) or Enter to skip: ").upper()
@@ -503,17 +641,17 @@ def addNewStaff():
 
 def viewallUser():
     header("ALL USERS")
-    print(f"{'ID':<5} {'Username':<15} {'Role':<15}")
+    print(Fore.CYAN + f"{'ID':<5} {'Username':<15} {'Role':<15}")
     element("-")
     for i in range(userCount):
-        print(f"{userData[i][0]:<5} {userData[i][1]:<15} {userData[i][3]:<15}")
+        print(Fore.WHITE + f"{userData[i][0]:<5} {userData[i][1]:<15} {userData[i][3]:<15}")
     element("-")
-    input("Press Enter...")
+    input(Fore.YELLOW + "Press Enter..." + Fore.RESET)
 
 def workerDuties():
     header("WORKER DUTIES")
-    print(f"[1] Assign Task  [2] View Tasks  [3] Complete Task  [0] Back")
-    opt = input("Option: ")
+    print(Fore.CYAN + f"[1] Assign Task  [2] View Tasks  [3] Complete Task  [0] Back")
+    opt = input(Fore.WHITE + "Option: ")
     if opt == '1': assignNewTask()
     elif opt == '2': viewAllTask()
     elif opt == '3': completeTask()
@@ -549,11 +687,17 @@ def completeTask():
 
 def viewBooking():
     header("BOOKINGS")
-    print(f"{'ID':<5} {'Name':<20} {'Room':<5} {'Status':<10} {'CheckIn'}")
+    print(Fore.CYAN + f"{'ID':<5} {'Name':<20} {'Room':<5} {'Status':<10} {'CheckIn'}")
+    element("-")
     for i in range(guest_count):
-        print(f"{guest_data[i][0]:<5} {guest_data[i][1]:<20} {guest_data[i][2]:<5} {guest_data[i][4]:<10} {guest_data[i][5]}")
+        row_color = Fore.WHITE
+        if guest_data[i][4] == "CheckedOut": row_color = Fore.RED
+        elif guest_data[i][4] == "Active": row_color = Fore.GREEN
+        
+        print(row_color + f"{guest_data[i][0]:<5} {guest_data[i][1]:<20} {guest_data[i][2]:<5} {guest_data[i][4]:<10} {guest_data[i][5]}")
+    element("-")
     
-    if input("[1] New Booking / [0] Back: ") == '1':
+    if input(Fore.YELLOW + "[1] New Booking / [0] Back: " + Fore.RESET) == '1':
         addNewBooking()
 
 def addNewBooking():
@@ -598,33 +742,56 @@ def addNewBooking():
 
 
 def viewBillingReport():
-    print("="*55)
-    print(f"{'Financials':^55}")
-    print("="*55)
-    # print(f"{'Guest Name':<30} | {'Bill (PKR)':>15}")
-    # print("="*55)
+    clear()
+    header("FINANCIAL REPORT")
+    print(Fore.CYAN + f"{'GUEST NAME':<30} | {'BILL (PKR)':>15}")
+    element("-")
     total = 0
     for i in range(guest_count):
         if guest_data[i][4] == "CheckedOut":
-            print(f"Guest: {guest_data[i][1]} | Bill: {guest_data[i][7]}")
+            print(Fore.WHITE + f"{guest_data[i][1]:<30} | {Fore.GREEN}{guest_data[i][7]:>15}")
             total += int(guest_data[i][7])
-    print("="*55)
-    print(f"Total Revenue: {total}")
-    print("="*55)
-    input("Press Enter...")
+    element("-")
+    print(Fore.YELLOW + Style.BRIGHT + f"{'TOTAL REVENUE':<30} | {total:>15}")
+    element("-")
+    input(Fore.YELLOW + "Press Enter..." + Fore.RESET)
+
 
 
 def viewAttendanceReport():
-    header("Attendance Log")
-    for i in range(attendance_count):
-        print(f"{attendanceData[i][1]} | {attendanceData[i][2]} | {attendanceData[i][3]} | In: {attendanceData[i][4]} | Out: {attendanceData[i][5]}")
-    input("Press Enter...")
+    clear()
+    header("ATTENDANCE LOG")
+    if attendance_count == 0:
+        print(Fore.RED + "No Attendance Records Found.")
+    else:
+        # Table Header
+        print(Fore.CYAN + f"{'NAME':<15} {'DATE':<12} {'STATUS':<10} {'IN':<8} {'OUT':<8}")
+        element("-")
+        
+        for i in range(attendance_count):
+            name = attendanceData[i][1]
+            date = attendanceData[i][2]
+            status = attendanceData[i][3]
+            time_in = attendanceData[i][4]
+            time_out = attendanceData[i][5]
+            
+            # Color coding status
+            status_color = Fore.GREEN if status == "Present" else Fore.RED
+            
+            print(Fore.WHITE + f"{name:<15} {date:<12} {status_color}{status:<10} {Fore.WHITE}{time_in:<8} {time_out:<8}")
+            
+    element("-")
+    input(Fore.YELLOW + "Press Enter to Back..." + Fore.RESET)
 
 def viewSystemStats():
-    print(f"Total Rooms: {roomCount}")
-    print(f"Total Staff: {userCount}")
-    print(f"Total Bookings: {guest_count}")
-    input("Press Enter...")
+    clear()
+    header("SYSTEM STATISTICS")
+    print(Fore.WHITE + f"Total Rooms    : {Fore.YELLOW}{roomCount}")
+    print(Fore.WHITE + f"Total Staff    : {Fore.YELLOW}{userCount}")
+    print(Fore.WHITE + f"Total Bookings : {Fore.YELLOW}{guest_count}")
+    print(Fore.WHITE + f"Revenue        : {Fore.GREEN}{sum([int(guest_data[i][7]) for i in range(guest_count)])}")
+    element("-")
+    input(Fore.YELLOW + "Press Enter..." + Fore.RESET)
 
 # --- RECEPTIONIST FUNCTIONS ---
 
@@ -648,14 +815,15 @@ def receptionist():
 
 def receptionist_dashboard():
     while True:
+        clear()
         header("RECEPTIONIST DASHBOARD")
-        print("[1] Available Rooms")
-        print("[2] Register Entry (Book)")
-        print("[3] Guest Checkout & Bill")
-        print("[4] View Bookings")
-        print("[0] Logout")
+        print(Fore.WHITE + f"[1] {Fore.YELLOW}Available Rooms")
+        print(Fore.WHITE + f"[2] {Fore.YELLOW}Register Entry (Book)")
+        print(Fore.WHITE + f"[3] {Fore.YELLOW}Guest Checkout & Bill")
+        print(Fore.WHITE + f"[4] {Fore.YELLOW}View Bookings")
+        print(Fore.RED   + f"[0] Logout")
         
-        opt = input("Option: ")
+        opt = input(Fore.CYAN + "Option: " + Fore.RESET)
         if opt == '1': viewAvailableRooms()
         elif opt == '2': addNewBooking()
         elif opt == '3': checkOut()
@@ -664,44 +832,21 @@ def receptionist_dashboard():
 
 def viewAvailableRooms():
     header("AVAILABLE ROOMS")
+    print(Fore.CYAN + f"{'ROOM NO':<10} {'TYPE':<20} {'PRICE'}")
+    element("-")
     occupied = [guest_data[k][2] for k in range(guest_count) if guest_data[k][4] == "Active"]
     for i in range(roomCount):
         if hotelData[i][0] not in occupied:
-            print(f"Room {hotelData[i][0]} | {hotelData[i][1]} | {hotelData[i][2]}")
-    input("Press Enter...")
+            print(Fore.WHITE + f"{hotelData[i][0]:<10} {hotelData[i][1]:<20} {hotelData[i][2]}")
+    element("-")
+    input(Fore.YELLOW + "Press Enter..." + Fore.RESET)
+
 
 def checkOut():
-    header("CHECKOUT")
-    rno = int(input("Enter Room Number to Checkout: "))
-    found = -1
-    for i in range(guest_count):
-        if guest_data[i][2] == rno and guest_data[i][4] == "Active":
-            found = i
-            break
-            
-    if found != -1:
-        # Calculate Bill
-        print(f"Checking out Guest: {guest_data[found][1]}")
-        days = int(input("Enter Total Days Stayed: "))
-        
-        # Find room price
-        price = 0
-        for r in range(roomCount):
-            if hotelData[r][0] == rno:
-                price = hotelData[r][2]
-                break
-        
-        bill = days * price
-        print(f"Total Bill: {bill} PKR")
-        confirm = input("Confirm Checkout (y/n)? ")
-        if confirm.lower() == 'y':
-            guest_data[found][4] = "CheckedOut"
-            guest_data[found][6] = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-            guest_data[found][7] = bill
-            save_data()
-            print("Checked Out Successfully.")
-    else:
-        print("No active booking found for this room.")
+    # Reuse the robust checkout logic from Admin
+    # But first we might want to support Room Number search?
+    # For now, let's just alias it since checkOutGuest lists active guests anyway.
+    checkOutGuest()
 
 # --- MANAGER FUNCTIONS ---
 
@@ -721,20 +866,26 @@ def manager():
     else:
         print("Invalid.")
 
+
 def manager_dashboard():
     while True:
+        clear()
         header("MANAGER DASHBOARD")
-        print("[1] View Rooms")
-        print("[2] View Bookings")
-        print("[3] Billing Reports")
-        print("[4] Staff Attendance")
-        print("[0] Logout")
+        print(Fore.WHITE + f"[1] {Fore.YELLOW}View Rooms")
+        print(Fore.WHITE + f"[2] {Fore.YELLOW}View Bookings")
+        print(Fore.WHITE + f"[3] {Fore.YELLOW}Billing Reports")
+        print(Fore.WHITE + f"[4] {Fore.YELLOW}Staff Attendance")
+        print(Fore.WHITE + f"[5] {Fore.YELLOW}System Stats")
+        print(Fore.WHITE + f"[6] {Fore.YELLOW}Worker Duties (Tasks)")
+        print(Fore.RED   + f"[0] Logout")
         
-        opt = input("Option: ")
+        opt = input(Fore.CYAN + "Option: " + Fore.RESET)
         if opt == '1': viewAllRooms() # Reuse
         elif opt == '2': viewBooking() # Reuse
         elif opt == '3': viewBillingReport() # Reuse
         elif opt == '4': viewAttendanceReport() # Reuse
+        elif opt == '5': viewSystemStats() # Reuse from Admin
+        elif opt == '6': workerDuties() # Reuse from Admin
         elif opt == '0': return
 
 # --- WORKER FUNCTIONS ---
@@ -756,6 +907,7 @@ def worker():
 
 def worker_dashboard(name):
     while True:
+        clear()
         header(f"WORKER: {name}")
         print("[1] Check-In (Attendance)")
         print("[2] Check-Out (Attendance)")
@@ -802,7 +954,11 @@ def viewMyTasks(name):
 
 
 
-def header(name):
+
+def header(name=None):
+    if name is None or name == "Hostel Management System": 
+        name = hotel_config.get("name", "Luxe Stay")
+
     print(Fore.CYAN + "=" * 55)
     print(Fore.YELLOW + Style.BRIGHT + f"{name:^55}")
     print(Fore.CYAN + "=" * 55)
@@ -812,11 +968,14 @@ def element(dash):
 
 # --- MAIN ---
 
+
+
 def main():
     load_data()
+    set_console_size()
     while True:
-        os.system('cls' if os.name == 'nt' else 'clear')
-        header("Hostel Management System")
+        clear()
+        header()
         print(Fore.GREEN + "\nWelcome! Please select your role to access the system\n")
         print(Fore.CYAN + "-" * 55)
         print(Fore.WHITE + f"[{Fore.MAGENTA}1{Fore.WHITE}] ADMINISTRATOR{space:<10} [{Fore.MAGENTA}2{Fore.WHITE}] RECEPTIONIST")

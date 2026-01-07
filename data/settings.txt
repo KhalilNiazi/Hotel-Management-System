@@ -1,1 +1,1 @@
-name=Khalil's Resort
+name=Hotel Management System
