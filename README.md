@@ -533,11 +533,11 @@ This project was developed as part of the **Introduction to Programming (Semeste
 
 ### Team Members
 
-| Name                           | Roll Number     | Contribution                  |
-| ------------------------------ | --------------- | ----------------------------- |
-| **Mohammad Bin Ali**           | 2025(S) BBIT 50 | Console Interface, Core Logic |
-| **Muhammad Khalil Akbar Khan** | 2025(S) BBIT 57 | Desktop GUI, Web Portal       |
-| **Syeda Hifsa Rizwan**         | 2025(S) BBIT 59 | Documentation, Testing        |
+| Name                           | Roll Number     |
+| ------------------------------ | --------------- | 
+| **Mohammad Bin Ali**           | 2025(S) BBIT 50 |
+| **Muhammad Khalil Akbar Khan** | 2025(S) BBIT 57 |
+| **Syeda Hifsa Rizwan**         | 2025(S) BBIT 59 |
 
 ### Supervisor
 
