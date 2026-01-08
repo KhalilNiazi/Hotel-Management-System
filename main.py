@@ -62,15 +62,15 @@ def save_settings():
         f.write(f"name={hotel_config['name']}\n")
 
 
-import requests
-import json
-import requests.exceptions
+# import requests
+# import json
+# import requests.exceptions
 
-# Config to switch betwen local and cloud
+# # Config to switch betwen local and cloud
 
-# Config to switch betwen local and cloud
-APPS_SCRIPT_URL = "" 
-USE_CLOUD = False    # Set to True to enable
+# # Config to switch betwen local and cloud
+# APPS_SCRIPT_URL = "" 
+# USE_CLOUD = False    # Set to True to enable
 
 def load_data():
     global roomCount, userCount, taskCount, guest_count, attendance_count
@@ -273,7 +273,7 @@ def header(name=None):
     print(Fore.CYAN + "=" * 55)
     print(Fore.YELLOW + Style.BRIGHT + f"{name:^55}")
     print(Fore.CYAN + "=" * 55)
-    
+    w 
 def element(dash):
     print(Fore.CYAN + dash * 55)
 

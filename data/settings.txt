@@ -1,1 +1,1 @@
-name=Hotel Management System
+name=khalil Hotel
